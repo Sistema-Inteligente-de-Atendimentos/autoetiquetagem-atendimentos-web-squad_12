@@ -1,9 +1,8 @@
-// src/views/Atendimentos/index.tsx
 import { Badge } from '../../components/ui/Badge';
 import { Download } from 'lucide-react';
 
 export default function Atendimentos() {
-  // Mock de dados baseado no seu diagrama de ER
+  // Mock de dados 
   const atendimentos = [
     { id: 'ATD-001', data: '17/03/2026', categoria: 'Suporte Técnico', score: 8.5, status: 'Validado' },
     { id: 'ATD-002', data: '17/03/2026', categoria: 'Comercial', score: 7.2, status: 'Pendente' },

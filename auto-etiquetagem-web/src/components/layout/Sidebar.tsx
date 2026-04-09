@@ -1,22 +1,45 @@
-// src/components/layout/Sidebar.tsx
 import { Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, ListTree, ClipboardCheck, Database, LogOut } from 'lucide-react';
+import logoImg from '../../assets/logo.png'; 
 
 export const Sidebar = () => {
   const location = useLocation();
 
   return (
     <aside className="w-64 h-screen bg-[#1e1a17] text-gray-400 flex flex-col p-4 fixed left-0 top-0 z-10">
-      <div className="flex items-center gap-2 mb-10 px-2 pt-4">
-        <div className="w-8 h-8 bg-[#cc142d] rounded-lg flex items-center justify-center text-white font-bold italic">C</div>
-        <span className="text-2xl font-bold text-white tracking-tighter italic leading-none uppercase">chip</span>
+      <div className="flex items-center justify-center mb-10 px-2 pt-6">
+        <img 
+          src={logoImg} 
+          alt="Logo Empresa" 
+          className="h-10 w-auto object-contain"
+        />
       </div>
 
       <nav className="flex-1 space-y-2">
-        <NavItem to="/" icon={<LayoutDashboard size={18} />} label="Dashboard" active={location.pathname === '/'} />
-        <NavItem to="/atendimentos" icon={<ListTree size={18} />} label="Lista de Atendimentos" active={location.pathname === '/atendimentos'} />
-        <NavItem to="/revisao" icon={<ClipboardCheck size={18} />} label="Revisão Humana" active={location.pathname === '/revisao'} />
-        <NavItem to="/entrada" icon={<Database size={18} />} label="Entrada de dados" active={location.pathname === '/entrada'} />
+        <NavItem 
+          to="/" 
+          icon={<LayoutDashboard size={18} />} 
+          label="Dashboard" 
+          active={location.pathname === '/'} 
+        />
+        <NavItem 
+          to="/atendimentos" 
+          icon={<ListTree size={18} />} 
+          label="Lista de Atendimentos" 
+          active={location.pathname === '/atendimentos'} 
+        />
+        <NavItem 
+          to="/revisao" 
+          icon={<ClipboardCheck size={18} />} 
+          label="Revisão Humana" 
+          active={location.pathname === '/revisao'} 
+        />
+        <NavItem 
+          to="/entrada" 
+          icon={<Database size={18} />} 
+          label="Entrada de dados" 
+          active={location.pathname === '/entrada'} 
+        />
       </nav>
 
       <button className="flex items-center gap-3 px-4 py-3 hover:text-white transition-colors mt-auto border-t border-gray-800 text-sm">
