@@ -1,6 +1,35 @@
 import { Upload, Send, FileSpreadsheet, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
+import { classifyText } from '../../services/api';
 
 export default function EntradaDados() {
+
+  const [text, setText] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleClassify(){
+    if (!text){
+      alert("Digite um texto");
+      return;
+    }
+
+    try{
+      setLoading(true)
+
+      const result = await classifyText(text);
+
+      console.log(result);
+
+    }catch(error){
+      console.error(error);
+      alert("Erro ao classificar");
+    } finally {
+      setLoading(false)
+    }
+  }
+
+
+
   return (
     <div className="space-y-8">
       <div>
@@ -20,12 +49,14 @@ export default function EntradaDados() {
           <div className="p-6 flex-1 flex flex-col space-y-4">
             <label className="text-sm font-semibold text-gray-700">Chat de Atendimento</label>
             <textarea 
+              value={text}
+              onChange={(e)=> setText(e.target.value)}
               placeholder="Cole o chat do atendimento aqui..."
               className="flex-1 w-full p-4 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all resize-none min-h-[300px]"
             />
-            <button className="w-full bg-[#cc142d] hover:bg-[#b01227] text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.98]">
+            <button onClick={handleClassify} className="w-full bg-[#cc142d] hover:bg-[#b01227] text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.98]">
               <Send size={18} />
-              Classificar com IA
+              {loading ? "Classificando": "Classificar com IA"}
             </button>
           </div>
         </div>
