@@ -20,8 +20,10 @@ export default function EntradaDados() {
 
       const response = await classifyText(text);
 
-      setResult(response);
+      setResult(response.data);
       console.log("API RESPONSE:", JSON.stringify(response, null, 2));
+      console.log(response.usage)
+      console.log("TOKENS:", response.usage?.total_tokens);
 
     }catch(error){
       console.error(error);
