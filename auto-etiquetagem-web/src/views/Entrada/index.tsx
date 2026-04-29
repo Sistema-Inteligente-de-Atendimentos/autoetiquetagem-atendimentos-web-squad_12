@@ -6,6 +6,7 @@ import type { ClassificationResult } from './types';
 export default function EntradaDados() {
 
   const [result,setResult] = useState<ClassificationResult | null>(null);
+  const [usage, setUsage] = useState<any>(null);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -21,6 +22,7 @@ export default function EntradaDados() {
       const response = await classifyText(text);
 
       setResult(response.data);
+      setUsage(response.usage);
       console.log("API RESPONSE:", JSON.stringify(response, null, 2));
       console.log(response.usage)
       console.log("TOKENS:", response.usage?.total_tokens);
@@ -107,6 +109,43 @@ export default function EntradaDados() {
                     </div>
                   </div>
 
+              </div>
+            )}
+
+
+            {usage && (
+              <div className="mt-4">
+                <p className="font-semibold mb-2 text-gray-700">Token Usage</p>
+
+                <div className="grid grid-cols-3 gap-2 text-xs">
+                  
+                  <div className="bg-gray-100 p-3 rounded-lg text-center">
+                    <p className="font-bold text-gray-800">
+                      {usage.prompt_tokens}
+                    </p>
+                    <p className="text-gray-500">Input</p>
+                  </div>
+
+                  <div className="bg-gray-100 p-3 rounded-lg text-center">
+                    <p className="font-bold text-gray-800">
+                      {usage.completion_tokens}
+                    </p>
+                    <p className="text-gray-500">Output</p>
+                  </div>
+
+                  <div className="bg-gray-100 p-3 rounded-lg text-center">
+                    <p className="font-bold text-gray-800">
+                      {usage.total_tokens}
+                    </p>
+                    <p className="text-gray-500">Total</p>
+                  </div>
+
+                </div>
+
+                <div className="mt-2 text-xs text-gray-500 flex justify-between">
+                  <span>⏱ {usage.total_time?.toFixed(2)}s</span>
+                  <span>Queue: {usage.queue_time?.toFixed(2)}s</span>
+                </div>
               </div>
             )}
           </div>
