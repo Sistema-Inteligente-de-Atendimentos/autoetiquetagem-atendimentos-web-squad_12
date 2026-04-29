@@ -1,9 +1,11 @@
 import { Upload, Send, FileSpreadsheet, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
 import { classifyText } from '../../services/api';
+import type { ClassificationResult } from './types';
 
 export default function EntradaDados() {
 
+  const [result,setResult] = useState<ClassificationResult | null>(null);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -16,9 +18,10 @@ export default function EntradaDados() {
     try{
       setLoading(true)
 
-      const result = await classifyText(text);
+      const response = await classifyText(text);
 
-      console.log(result);
+      setResult(response);
+      console.log("API RESPONSE:", JSON.stringify(response, null, 2));
 
     }catch(error){
       console.error(error);
@@ -58,6 +61,52 @@ export default function EntradaDados() {
               <Send size={18} />
               {loading ? "Classificando": "Classificar com IA"}
             </button>
+            {result && (
+              <div className="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-4 text-sm">
+                <h4 className="font-bold text-gray-800">Classification Result</h4>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <p><span className="font-semibold">Categoria:</span> {result.categoria}</p>
+                    <p><span className="font-semibold">Intenção:</span> {result.intencao}</p>
+                    <p><span className="font-semibold">Sentimento:</span> {result.sentimento}</p>
+                    <p><span className="font-semibold">Criticidade:</span> {result.criticidade}</p>
+                    <p><span className="font-semibold">SLA:</span> {result.sla_urgencia}</p>
+                  </div>
+
+                  <div>
+                    <p className="font-semibold mb-1">Summary</p>
+                    <ul className="list-disc list-inside text-gray-600">
+                      {result.resumo?.map((item, index) => (
+                        <li key={index}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div>
+                    <p className="font-semibold mb-1">Topics</p>
+                    <ul className="list-disc list-inside text-gray-600">
+                      {result.topicos?.map((topic, index) => (
+                        <li key={index}>{topic}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div>
+                    <p className="font-semibold mb-1">Quality</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <p>Empatia: {result.qualidade?.empatia}</p>
+                        <p>Claridade: {result.qualidade?.clareza}</p>
+                        <p>Objetividade: {result.qualidade?.objetividade}</p>
+                        <p>Resolutividade: {result.qualidade?.resolutividade}</p>
+
+                        <p className="col-span-2 font-bold">
+                          Score Final: {result.qualidade?.score_final}
+                        </p>
+                    </div>
+                  </div>
+
+              </div>
+            )}
           </div>
         </div>
 
