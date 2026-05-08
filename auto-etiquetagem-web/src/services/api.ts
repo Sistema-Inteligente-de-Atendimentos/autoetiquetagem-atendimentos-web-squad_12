@@ -13,3 +13,18 @@ export async function classifyText(text:string){
 
     return response.json()
 }
+
+export async function getAtendimentos() {
+    const response = await fetch("http://127.0.0.1:8000/atendimentos", {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error("Erro ao carregar histórico");
+    }
+
+    return response.json();
+}
