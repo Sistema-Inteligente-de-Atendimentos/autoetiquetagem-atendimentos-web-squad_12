@@ -1,6 +1,7 @@
-import { Upload, Send, FileSpreadsheet, AlertCircle } from 'lucide-react';
+import { Upload, Send, FileSpreadsheet, AlertCircle, ExternalLink } from 'lucide-react';
 import { useState } from 'react';
-import { classifyText } from '../../services/api';
+import { Link } from 'react-router-dom';
+import { classifyText, type ClassifyResponse } from '../../services/api';
 import type { ClassificationResult } from './types';
 
 export default function EntradaDados() {
@@ -8,7 +9,17 @@ export default function EntradaDados() {
   const [result,setResult] = useState<ClassificationResult | null>(null);
   const [usage, setUsage] = useState<any>(null);
   const [text, setText] = useState("");
+  const [canal, setCanal] = useState("Web");
+  const [clienteNome, setClienteNome] = useState("");
+  const [atendenteNome, setAtendenteNome] = useState("");
   const [loading, setLoading] = useState(false);
+  const [protocoloCriado, setProtocoloCriado] = useState<ClassifyResponse | null>(null);
+
+  function normalizaResumo(resumo: string | string[] | undefined): string[] {
+    if (!resumo) return [];
+    if (Array.isArray(resumo)) return resumo;
+    return [resumo];
+  }
 
   async function handleClassify(){
     if (!text){
@@ -19,13 +30,21 @@ export default function EntradaDados() {
     try{
       setLoading(true)
 
-      const response = await classifyText(text);
+      const response = await classifyText({
+        text,
+        canal,
+        cliente_nome: clienteNome || undefined,
+        atendente_nome: atendenteNome || undefined,
+      });
 
-      setResult(response.data);
+      const normalizado = {
+        ...response.data,
+        resumo: normalizaResumo(response.data.resumo as any),
+      } as ClassificationResult;
+
+      setResult(normalizado);
       setUsage(response.usage);
-      console.log("API RESPONSE:", JSON.stringify(response, null, 2));
-      console.log(response.usage)
-      console.log("TOKENS:", response.usage?.total_tokens);
+      setProtocoloCriado(response);
 
     }catch(error){
       console.error(error);
@@ -54,8 +73,44 @@ export default function EntradaDados() {
           </div>
           
           <div className="p-6 flex-1 flex flex-col space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label className="text-xs font-semibold text-gray-700">Canal</label>
+                <select
+                  value={canal}
+                  onChange={(e) => setCanal(e.target.value)}
+                  className="w-full mt-1 p-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                >
+                  <option>Web</option>
+                  <option>WhatsApp</option>
+                  <option>Email</option>
+                  <option>Telefone</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-700">Cliente</label>
+                <input
+                  type="text"
+                  value={clienteNome}
+                  onChange={(e) => setClienteNome(e.target.value)}
+                  placeholder="Nome do cliente"
+                  className="w-full mt-1 p-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-700">Atendente</label>
+                <input
+                  type="text"
+                  value={atendenteNome}
+                  onChange={(e) => setAtendenteNome(e.target.value)}
+                  placeholder="Nome do atendente"
+                  className="w-full mt-1 p-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                />
+              </div>
+            </div>
+
             <label className="text-sm font-semibold text-gray-700">Chat de Atendimento</label>
-            <textarea 
+            <textarea
               value={text}
               onChange={(e)=> setText(e.target.value)}
               placeholder="Cole o chat do atendimento aqui..."
@@ -65,6 +120,26 @@ export default function EntradaDados() {
               <Send size={18} />
               {loading ? "Classificando": "Classificar com IA"}
             </button>
+
+            {protocoloCriado && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-bold text-green-800">
+                    Protocolo #{protocoloCriado.protocolo_id} criado com sucesso!
+                  </p>
+                  <p className="text-[10px] text-green-600 font-mono">
+                    {protocoloCriado.protocolo_numero}
+                  </p>
+                </div>
+                <Link
+                  to={`/atendimentos/${protocoloCriado.protocolo_id}`}
+                  className="inline-flex items-center gap-1 text-sm font-bold text-[#cc142d] hover:underline"
+                >
+                  Ver detalhes <ExternalLink size={14} />
+                </Link>
+              </div>
+            )}
+
             {result && (
               <div className="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-4 text-sm">
                 <h4 className="font-bold text-gray-800">Classification Result</h4>

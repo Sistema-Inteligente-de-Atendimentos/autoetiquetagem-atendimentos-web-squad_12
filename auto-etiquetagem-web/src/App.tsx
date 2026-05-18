@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Sidebar } from './components/layout/Sidebar';
 import Dashboard from './views/Dashboard';
 import Atendimentos from './views/Atendimentos';
+import AtendimentoDetalhe from './views/Atendimentos/Detalhe';
 import Revisao from './views/Revisao';
 import EntradaDados from './views/Entrada';
 
@@ -18,6 +19,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/atendimentos" element={<Atendimentos />} />
+            <Route path="/atendimentos/:protocoloId" element={<AtendimentoDetalhe />} />
             <Route path="/revisao" element={<Revisao />} />
             <Route path="/entrada" element={<EntradaDados />} />
             
