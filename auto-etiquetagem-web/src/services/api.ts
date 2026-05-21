@@ -136,6 +136,45 @@ export async function getAtendimentoDetalhe(protocoloId: number | string): Promi
     return response.json();
 }
 
+export type BatchResultItem = {
+    linha: number;
+    protocolo_id: number;
+    protocolo_numero: string;
+    categoria: string | null;
+    sentimento: string | null;
+    nota: number;
+};
+
+export type BatchErrorItem = {
+    linha: number;
+    erro: string;
+};
+
+export type BatchResponse = {
+    total_enviados: number;
+    total_processados: number;
+    total_erros: number;
+    resultados: BatchResultItem[];
+    erros: BatchErrorItem[];
+};
+
+export async function classifyBatch(file: File): Promise<BatchResponse> {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch(`${API_BASE}/classify/batch`, {
+        method: "POST",
+        body: formData,
+    });
+
+    if (!response.ok) {
+        const err = await response.json().catch(() => null);
+        throw new Error(err?.detail || "Erro ao processar arquivo em lote");
+    }
+
+    return response.json();
+}
+
 export async function getDashboardStats(): Promise<DashboardStats> {
     const response = await fetch(`${API_BASE}/dashboard/stats`, {
         method: "GET",
