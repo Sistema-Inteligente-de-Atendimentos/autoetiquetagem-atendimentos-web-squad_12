@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAtendimentos, type AtendimentoListItem } from '../../services/api';
-import { Search, Eye, Clock, MessageSquare } from 'lucide-react';
+import { Search, Eye, Clock, MessageSquare, Award } from 'lucide-react';
 
 export default function Atendimentos() {
   const [dados, setDados] = useState<AtendimentoListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtro, setFiltro] = useState("");
+  const [apenasExemplos, setApenasExemplos] = useState(false);
 
   useEffect(() => {
     async function carregarHistorico() {
@@ -24,6 +25,7 @@ export default function Atendimentos() {
 
   const termo = filtro.toLowerCase();
   const dadosFiltrados = dados.filter(item => {
+    if (apenasExemplos && !item.aprovado_como_exemplo) return false;
     return (
       item.protocolo_id.toString().includes(filtro) ||
       (item.numero?.toLowerCase().includes(termo) ?? false) ||
@@ -31,6 +33,8 @@ export default function Atendimentos() {
       (item.comentario?.toLowerCase().includes(termo) ?? false)
     );
   });
+
+  const totalExemplos = dados.filter(d => d.aprovado_como_exemplo).length;
 
   if (loading) {
     return (
@@ -49,15 +53,30 @@ export default function Atendimentos() {
           <p className="text-sm text-gray-500">Monitore e audite as classificações realizadas pela IA</p>
         </div>
 
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-          <input
-            type="text"
-            placeholder="Buscar por protocolo, cliente ou conteúdo..."
-            value={filtro}
-            onChange={(e) => setFiltro(e.target.value)}
-            className="pl-10 pr-4 py-2 w-full md:w-96 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all"
-          />
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setApenasExemplos(!apenasExemplos)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all border ${
+              apenasExemplos
+                ? 'bg-amber-50 border-amber-300 text-amber-700'
+                : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+            }`}
+            title="Mostrar apenas atendimentos aprovados como bom exemplo"
+          >
+            <Award size={16} />
+            Exemplos ({totalExemplos})
+          </button>
+
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <input
+              type="text"
+              placeholder="Buscar por protocolo, cliente ou conteúdo..."
+              value={filtro}
+              onChange={(e) => setFiltro(e.target.value)}
+              className="pl-10 pr-4 py-2 w-full md:w-96 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all"
+            />
+          </div>
         </div>
       </div>
 
@@ -81,9 +100,18 @@ export default function Atendimentos() {
                   return (
                     <tr key={item.protocolo_id} className="hover:bg-gray-50/50 transition-colors group">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="font-mono text-sm font-bold text-gray-900">
-                          #{item.protocolo_id}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-sm font-bold text-gray-900">
+                            #{item.protocolo_id}
+                          </span>
+                          {item.aprovado_como_exemplo && (
+                            <Award
+                              size={14}
+                              className="text-amber-500"
+                              aria-label="Aprovado como exemplo"
+                            />
+                          )}
+                        </div>
                         <p className="text-[10px] text-gray-400 font-mono">
                           {item.numero?.slice(0, 8)}
                         </p>

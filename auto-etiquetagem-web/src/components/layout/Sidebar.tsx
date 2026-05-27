@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, ListTree, ClipboardCheck, Database, LogOut } from 'lucide-react';
+import { LayoutDashboard, ListTree, Database, LogOut } from 'lucide-react';
 import logoImg from '../../assets/logo.png'; 
 
 export const Sidebar = () => {
@@ -28,14 +28,8 @@ export const Sidebar = () => {
           label="Lista de Atendimentos" 
           active={location.pathname === '/atendimentos'} 
         />
-        <NavItem 
-          to="/revisao" 
-          icon={<ClipboardCheck size={18} />} 
-          label="Revisão Humana" 
-          active={location.pathname === '/revisao'} 
-        />
-        <NavItem 
-          to="/entrada" 
+        <NavItem
+          to="/entrada"
           icon={<Database size={18} />} 
           label="Entrada de dados" 
           active={location.pathname === '/entrada'} 
