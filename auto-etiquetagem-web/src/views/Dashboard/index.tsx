@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FileText, TrendingUp, MessageSquare, BarChart as BarChartIcon, PieChart as PieChartIcon } from 'lucide-react';
+import { FileText, TrendingUp, MessageSquare, BarChart as BarChartIcon, PieChart as PieChartIcon, Award } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
@@ -82,12 +82,12 @@ export default function Dashboard() {
           iconColor="text-orange-500"
         />
         <StatCard
-          title="Notas registradas"
-          value={String(totalAvaliados)}
-          trend={`${stats.total_atendimentos - totalAvaliados} sem nota`}
+          title="Exemplos aprovados"
+          value={String(stats.total_exemplos_aprovados)}
+          trend={stats.total_exemplos_aprovados > 0 ? "usados como referência" : "nenhum ainda"}
           trendType="positive"
-          icon={BarChartIcon}
-          iconColor="text-purple-500"
+          icon={Award}
+          iconColor="text-amber-500"
         />
       </div>
 

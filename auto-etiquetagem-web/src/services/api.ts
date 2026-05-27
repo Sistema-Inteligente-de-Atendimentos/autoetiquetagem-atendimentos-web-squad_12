@@ -50,6 +50,7 @@ export type AtendimentoListItem = {
     fechado_em: string | null;
     nota: number | null;
     comentario: string | null;
+    aprovado_como_exemplo: boolean;
 };
 
 export type MensagemDTO = {
@@ -73,6 +74,10 @@ export type AvaliacaoDTO = {
     nota: number | null;
     comentario: string | null;
     avaliado_em: string | null;
+    aprovado_como_exemplo: boolean;
+    aprovado_por: string | null;
+    aprovado_em: string | null;
+    observacao_aprovacao: string | null;
 };
 
 export type AtendimentoDetalhe = {
@@ -90,6 +95,7 @@ export type DashboardStats = {
     media_qualidade: number;
     volume_por_canal: { canal: string; total: number }[];
     distribuicao_notas: { nota: number; total: number }[];
+    total_exemplos_aprovados: number;
 };
 
 
@@ -131,6 +137,39 @@ export async function getAtendimentoDetalhe(protocoloId: number | string): Promi
 
     if (!response.ok) {
         throw new Error("Erro ao carregar detalhes do atendimento");
+    }
+
+    return response.json();
+}
+
+export async function aprovarComoExemplo(
+    protocoloId: number | string,
+    revisor: string,
+    observacao?: string,
+): Promise<{ status: string; avaliacao_id: number; aprovado_por: string; aprovado_em: string }> {
+    const response = await fetch(`${API_BASE}/atendimentos/${protocoloId}/aprovar-exemplo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ revisor, observacao }),
+    });
+
+    if (!response.ok) {
+        throw new Error("Erro ao aprovar como exemplo");
+    }
+
+    return response.json();
+}
+
+export async function removerExemplo(
+    protocoloId: number | string,
+): Promise<{ status: string; avaliacao_id: number }> {
+    const response = await fetch(`${API_BASE}/atendimentos/${protocoloId}/remover-exemplo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) {
+        throw new Error("Erro ao remover aprovação");
     }
 
     return response.json();

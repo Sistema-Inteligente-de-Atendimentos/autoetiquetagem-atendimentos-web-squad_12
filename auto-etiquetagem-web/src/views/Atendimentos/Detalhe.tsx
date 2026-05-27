@@ -1,13 +1,21 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, User, MessageSquare, Star, Clock } from 'lucide-react';
-import { getAtendimentoDetalhe, type AtendimentoDetalhe } from '../../services/api';
+import { ArrowLeft, User, MessageSquare, Star, Clock, Award, X } from 'lucide-react';
+import {
+  getAtendimentoDetalhe,
+  aprovarComoExemplo,
+  removerExemplo,
+  type AtendimentoDetalhe,
+} from '../../services/api';
 
 export default function AtendimentoDetalheView() {
   const { protocoloId } = useParams<{ protocoloId: string }>();
   const [detalhe, setDetalhe] = useState<AtendimentoDetalhe | null>(null);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
+  const [revisor, setRevisor] = useState('');
+  const [observacao, setObservacao] = useState('');
+  const [salvando, setSalvando] = useState(false);
 
   useEffect(() => {
     if (!protocoloId) return;
@@ -24,6 +32,42 @@ export default function AtendimentoDetalheView() {
     }
     carregar();
   }, [protocoloId]);
+
+  async function handleAprovar() {
+    if (!protocoloId) return;
+    if (!revisor.trim()) {
+      alert('Informe o nome do revisor');
+      return;
+    }
+    try {
+      setSalvando(true);
+      await aprovarComoExemplo(protocoloId, revisor.trim(), observacao.trim() || undefined);
+      const atualizado = await getAtendimentoDetalhe(protocoloId);
+      setDetalhe(atualizado);
+      setObservacao('');
+    } catch (e) {
+      console.error(e);
+      alert('Erro ao aprovar como exemplo');
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  async function handleRemover() {
+    if (!protocoloId) return;
+    if (!confirm('Tem certeza que deseja remover esta aprovação?')) return;
+    try {
+      setSalvando(true);
+      await removerExemplo(protocoloId);
+      const atualizado = await getAtendimentoDetalhe(protocoloId);
+      setDetalhe(atualizado);
+    } catch (e) {
+      console.error(e);
+      alert('Erro ao remover aprovação');
+    } finally {
+      setSalvando(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -171,6 +215,91 @@ export default function AtendimentoDetalheView() {
           <p className="text-sm text-gray-400 italic">Ainda sem avaliação para este protocolo.</p>
         )}
       </div>
+
+      {avaliacao && (
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+          <h3 className="font-bold text-gray-800 flex items-center gap-2 mb-4">
+            <Award size={18} className="text-amber-500" />
+            Validação Humana
+          </h3>
+
+          {avaliacao.aprovado_como_exemplo ? (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="bg-amber-100 rounded-full p-2">
+                    <Award size={20} className="text-amber-600" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-amber-800">
+                      Aprovado como bom exemplo
+                    </p>
+                    <p className="text-sm text-amber-700 mt-1">
+                      Por <strong>{avaliacao.aprovado_por || 'Anônimo'}</strong>
+                      {avaliacao.aprovado_em && (
+                        <> em {new Date(avaliacao.aprovado_em).toLocaleString('pt-BR')}</>
+                      )}
+                    </p>
+                    {avaliacao.observacao_aprovacao && (
+                      <p className="text-sm text-amber-700 mt-2 italic">
+                        "{avaliacao.observacao_aprovacao}"
+                      </p>
+                    )}
+                    <p className="text-xs text-amber-600 mt-3">
+                      Esta avaliação está sendo usada como referência para a IA classificar novos atendimentos.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleRemover}
+                  disabled={salvando}
+                  title="Remover aprovação"
+                  className="p-2 text-amber-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all disabled:opacity-50"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600">
+                Se esta classificação está correta, aprove como exemplo. A IA usará casos
+                aprovados como referência para melhorar futuras classificações.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-gray-700">Revisor</label>
+                  <input
+                    type="text"
+                    value={revisor}
+                    onChange={(e) => setRevisor(e.target.value)}
+                    placeholder="Seu nome"
+                    className="w-full mt-1 p-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-700">Observação (opcional)</label>
+                  <input
+                    type="text"
+                    value={observacao}
+                    onChange={(e) => setObservacao(e.target.value)}
+                    placeholder="Por que é um bom exemplo?"
+                    className="w-full mt-1 p-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+                  />
+                </div>
+              </div>
+              <button
+                onClick={handleAprovar}
+                disabled={salvando || !revisor.trim()}
+                className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Award size={18} />
+                {salvando ? 'Salvando...' : 'Aprovar como bom exemplo'}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
