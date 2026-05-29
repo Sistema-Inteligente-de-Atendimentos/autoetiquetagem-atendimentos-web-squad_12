@@ -1,4 +1,8 @@
-const API_BASE = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
+export const API_BASE = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
+
+export function getExportUrl(): string {
+    return `${API_BASE}/atendimentos/export`;
+}
 
 export type ClassifyPayload = {
     text: string;

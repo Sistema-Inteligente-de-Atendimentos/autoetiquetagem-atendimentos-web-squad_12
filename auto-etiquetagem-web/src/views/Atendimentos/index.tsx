@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getAtendimentos, type AtendimentoListItem } from '../../services/api';
-import { Search, Eye, Clock, MessageSquare, Award } from 'lucide-react';
+import { getAtendimentos, getExportUrl, type AtendimentoListItem } from '../../services/api';
+import { Search, Eye, Clock, MessageSquare, Award, Download } from 'lucide-react';
 
 export default function Atendimentos() {
   const [dados, setDados] = useState<AtendimentoListItem[]>([]);
@@ -54,6 +54,15 @@ export default function Atendimentos() {
         </div>
 
         <div className="flex items-center gap-3">
+          <a
+            href={getExportUrl()}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all border bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+            title="Exportar todos os atendimentos em CSV"
+          >
+            <Download size={16} />
+            Exportar CSV
+          </a>
+
           <button
             onClick={() => setApenasExemplos(!apenasExemplos)}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all border ${
