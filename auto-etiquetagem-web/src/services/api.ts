@@ -230,3 +230,36 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
     return response.json();
 }
+
+export type CronStatusItem = {
+    fonte: string;
+    ultima_linha: number;
+    total_processados: number;
+    atualizado_em: string | null;
+};
+
+export async function getCronStatus(): Promise<CronStatusItem[]> {
+    const response = await fetch(`${API_BASE}/cron/status`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) {
+        throw new Error("Erro ao carregar status do cron");
+    }
+
+    return response.json();
+}
+
+export async function resetCron(): Promise<{ status: string; fontes_removidas: number }> {
+    const response = await fetch(`${API_BASE}/cron/reset`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) {
+        throw new Error("Erro ao resetar contador do cron");
+    }
+
+    return response.json();
+}
