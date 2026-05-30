@@ -1,12 +1,27 @@
 import { useEffect, useState } from 'react';
-import { RefreshCw, Settings, Clock, RotateCcw, CheckCircle } from 'lucide-react';
-import { getCronStatus, resetCron, type CronStatusItem } from '../../services/api';
+import { RefreshCw, Settings, Clock, RotateCcw, CheckCircle, Tag, X, Plus, Lock } from 'lucide-react';
+import {
+  getCronStatus,
+  resetCron,
+  getCategorias,
+  addCategoria,
+  removeCategoria,
+  type CronStatusItem,
+  type CategoriaExtra,
+} from '../../services/api';
 
 export default function Configuracoes() {
   const [status, setStatus] = useState<CronStatusItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [resetando, setResetando] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+
+  const [fixas, setFixas] = useState<string[]>([]);
+  const [extras, setExtras] = useState<CategoriaExtra[]>([]);
+  const [novaCategoria, setNovaCategoria] = useState('');
+  const [revisorCategoria, setRevisorCategoria] = useState('');
+  const [salvandoCategoria, setSalvandoCategoria] = useState(false);
+  const [erroCategoria, setErroCategoria] = useState<string | null>(null);
 
   async function carregarStatus() {
     try {
@@ -20,8 +35,19 @@ export default function Configuracoes() {
     }
   }
 
+  async function carregarCategorias() {
+    try {
+      const data = await getCategorias();
+      setFixas(data.fixas);
+      setExtras(data.extras);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
   useEffect(() => {
     carregarStatus();
+    carregarCategorias();
   }, []);
 
   async function handleReset() {
@@ -43,6 +69,39 @@ export default function Configuracoes() {
     }
   }
 
+  async function handleAddCategoria() {
+    const nome = novaCategoria.trim();
+    if (!nome) {
+      setErroCategoria('Informe o nome da categoria');
+      return;
+    }
+    try {
+      setSalvandoCategoria(true);
+      setErroCategoria(null);
+      await addCategoria(nome, revisorCategoria.trim() || undefined);
+      setNovaCategoria('');
+      await carregarCategorias();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Erro ao adicionar';
+      setErroCategoria(msg);
+    } finally {
+      setSalvandoCategoria(false);
+    }
+  }
+
+  async function handleRemoveCategoria(id: number, nome: string) {
+    if (!confirm(`Remover a categoria "${nome}"? Atendimentos já classificados com ela continuam intactos.`)) {
+      return;
+    }
+    try {
+      await removeCategoria(id);
+      await carregarCategorias();
+    } catch (e) {
+      console.error(e);
+      alert('Erro ao remover categoria.');
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -51,6 +110,97 @@ export default function Configuracoes() {
           Configurações
         </h2>
         <p className="text-sm text-gray-500">Gerencie as regras e o processamento automático do sistema</p>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+        <div className="mb-4">
+          <h3 className="font-bold text-gray-800 flex items-center gap-2">
+            <Tag size={18} className="text-gray-400" />
+            Categorias de Atendimento
+          </h3>
+          <p className="text-xs text-gray-400 mt-1">
+            Categorias usadas pela IA na classificação. As 9 categorias base são fixas. Você pode adicionar novas conforme necessário.
+          </p>
+        </div>
+
+        <div className="mb-4">
+          <p className="text-[10px] uppercase text-gray-400 font-bold tracking-widest mb-2">
+            Categorias Fixas ({fixas.length})
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {fixas.map((cat) => (
+              <span
+                key={cat}
+                className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-200"
+              >
+                <Lock size={11} className="text-gray-400" />
+                {cat}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <p className="text-[10px] uppercase text-gray-400 font-bold tracking-widest mb-2">
+            Categorias Adicionadas ({extras.length})
+          </p>
+          {extras.length === 0 ? (
+            <p className="text-xs text-gray-400 italic">Nenhuma categoria customizada ainda. Adicione abaixo se precisar.</p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {extras.map((cat) => (
+                <span
+                  key={cat.id}
+                  className="inline-flex items-center gap-1.5 bg-red-50 text-[#cc142d] px-3 py-1.5 rounded-lg text-sm font-medium border border-red-100"
+                  title={cat.criada_por ? `Adicionada por ${cat.criada_por}` : undefined}
+                >
+                  {cat.nome}
+                  <button
+                    onClick={() => handleRemoveCategoria(cat.id, cat.nome)}
+                    className="hover:bg-red-100 rounded-full p-0.5 transition-colors"
+                    title="Remover"
+                  >
+                    <X size={12} />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="border-t border-gray-100 pt-4">
+          <p className="text-[10px] uppercase text-gray-400 font-bold tracking-widest mb-2">
+            Adicionar nova categoria
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-2">
+            <input
+              type="text"
+              value={novaCategoria}
+              onChange={(e) => { setNovaCategoria(e.target.value); setErroCategoria(null); }}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleAddCategoria(); }}
+              placeholder="Nome da categoria (ex: Jurídico)"
+              className="p-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-300"
+            />
+            <input
+              type="text"
+              value={revisorCategoria}
+              onChange={(e) => setRevisorCategoria(e.target.value)}
+              placeholder="Seu nome (opcional)"
+              className="p-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-300"
+            />
+            <button
+              onClick={handleAddCategoria}
+              disabled={salvandoCategoria || !novaCategoria.trim()}
+              className="bg-[#cc142d] hover:bg-[#b01227] text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            >
+              <Plus size={16} />
+              {salvandoCategoria ? 'Salvando' : 'Adicionar'}
+            </button>
+          </div>
+          {erroCategoria && (
+            <p className="mt-2 text-xs text-red-600">{erroCategoria}</p>
+          )}
+        </div>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
@@ -137,14 +287,6 @@ export default function Configuracoes() {
             </div>
           )}
         </div>
-      </div>
-
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 opacity-60">
-        <h3 className="font-bold text-gray-800 mb-1">Outras configurações</h3>
-        <p className="text-xs text-gray-400 mb-4">Em breve: gerenciamento de categorias, modo escuro, regras de validação</p>
-        <p className="text-sm text-gray-400 italic">
-          As próximas configurações (taxonomia editável, tema, limites de qualidade) serão adicionadas aqui.
-        </p>
       </div>
     </div>
   );

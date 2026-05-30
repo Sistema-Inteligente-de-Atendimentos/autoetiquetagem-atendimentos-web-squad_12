@@ -263,3 +263,56 @@ export async function resetCron(): Promise<{ status: string; fontes_removidas: n
 
     return response.json();
 }
+
+export type CategoriaExtra = {
+    id: number;
+    nome: string;
+    criada_por: string | null;
+    criado_em: string | null;
+};
+
+export type CategoriasResponse = {
+    fixas: string[];
+    extras: CategoriaExtra[];
+};
+
+export async function getCategorias(): Promise<CategoriasResponse> {
+    const response = await fetch(`${API_BASE}/config/categorias`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) {
+        throw new Error("Erro ao carregar categorias");
+    }
+
+    return response.json();
+}
+
+export async function addCategoria(nome: string, criadaPor?: string): Promise<CategoriaExtra> {
+    const response = await fetch(`${API_BASE}/config/categorias`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nome, criada_por: criadaPor }),
+    });
+
+    if (!response.ok) {
+        const err = await response.json().catch(() => null);
+        throw new Error(err?.detail || "Erro ao adicionar categoria");
+    }
+
+    return response.json();
+}
+
+export async function removeCategoria(id: number): Promise<{ status: string; id: number }> {
+    const response = await fetch(`${API_BASE}/config/categorias/${id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) {
+        throw new Error("Erro ao remover categoria");
+    }
+
+    return response.json();
+}
