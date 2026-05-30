@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, ListTree, Database, LogOut } from 'lucide-react';
+import { LayoutDashboard, ListTree, Database, Settings, LogOut } from 'lucide-react';
 import logoImg from '../../assets/logo.png'; 
 
 export const Sidebar = () => {
@@ -30,9 +30,15 @@ export const Sidebar = () => {
         />
         <NavItem
           to="/entrada"
-          icon={<Database size={18} />} 
-          label="Entrada de dados" 
-          active={location.pathname === '/entrada'} 
+          icon={<Database size={18} />}
+          label="Entrada de dados"
+          active={location.pathname === '/entrada'}
+        />
+        <NavItem
+          to="/configuracoes"
+          icon={<Settings size={18} />}
+          label="Configurações"
+          active={location.pathname === '/configuracoes'}
         />
       </nav>
 

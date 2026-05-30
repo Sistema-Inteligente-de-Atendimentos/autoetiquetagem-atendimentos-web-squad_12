@@ -5,6 +5,7 @@ import Dashboard from './views/Dashboard';
 import Atendimentos from './views/Atendimentos';
 import AtendimentoDetalhe from './views/Atendimentos/Detalhe';
 import EntradaDados from './views/Entrada';
+import Configuracoes from './views/Configuracoes';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
             <Route path="/atendimentos" element={<Atendimentos />} />
             <Route path="/atendimentos/:protocoloId" element={<AtendimentoDetalhe />} />
             <Route path="/entrada" element={<EntradaDados />} />
+            <Route path="/configuracoes" element={<Configuracoes />} />
             
             {/* Redireciona qualquer rota inexistente para o Dashboard */}
             <Route path="*" element={<Navigate to="/" />} />
