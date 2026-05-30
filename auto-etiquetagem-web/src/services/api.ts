@@ -264,6 +264,49 @@ export async function resetCron(): Promise<{ status: string; fontes_removidas: n
     return response.json();
 }
 
+export type Planilha = {
+    id: number;
+    url: string;
+    nome: string | null;
+    ativo: boolean;
+    criado_por: string | null;
+    criado_em: string | null;
+    ultima_linha: number;
+    total_processados: number;
+    atualizado_em: string | null;
+};
+
+export async function getPlanilhas(): Promise<Planilha[]> {
+    const r = await fetch(`${API_BASE}/config/planilhas`, { headers: { "Content-Type": "application/json" } });
+    if (!r.ok) throw new Error("Erro ao carregar planilhas");
+    return r.json();
+}
+
+export async function addPlanilha(url: string, nome?: string, criadoPor?: string): Promise<Planilha & { linhas_detectadas: number }> {
+    const r = await fetch(`${API_BASE}/config/planilhas`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url, nome, criado_por: criadoPor }),
+    });
+    if (!r.ok) {
+        const err = await r.json().catch(() => null);
+        throw new Error(err?.detail || "Erro ao adicionar planilha");
+    }
+    return r.json();
+}
+
+export async function ativarPlanilha(id: number): Promise<void> {
+    await fetch(`${API_BASE}/config/planilhas/${id}/ativar`, { method: "PATCH" });
+}
+
+export async function desativarPlanilha(id: number): Promise<void> {
+    await fetch(`${API_BASE}/config/planilhas/${id}/desativar`, { method: "PATCH" });
+}
+
+export async function removePlanilha(id: number): Promise<void> {
+    await fetch(`${API_BASE}/config/planilhas/${id}`, { method: "DELETE" });
+}
+
 export type CategoriaExtra = {
     id: number;
     nome: string;
