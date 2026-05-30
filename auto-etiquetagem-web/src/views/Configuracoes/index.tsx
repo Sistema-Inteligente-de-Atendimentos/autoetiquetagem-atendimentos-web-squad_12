@@ -110,8 +110,8 @@ export default function Configuracoes() {
 
         <div className="mt-6 border-t border-gray-100 pt-4">
           <div className="flex items-start gap-3 mb-3">
-            <div className="bg-orange-50 rounded-full p-2 mt-0.5">
-              <RotateCcw size={16} className="text-orange-500" />
+            <div className="bg-red-50 rounded-full p-2 mt-0.5">
+              <RotateCcw size={16} className="text-[#cc142d]" />
             </div>
             <div className="flex-1">
               <p className="font-bold text-gray-800 text-sm">Resetar contador</p>
@@ -124,7 +124,7 @@ export default function Configuracoes() {
           <button
             onClick={handleReset}
             disabled={resetando}
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            className="w-full bg-[#cc142d] hover:bg-[#b01227] text-white font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
             <RotateCcw size={16} />
             {resetando ? 'Resetando...' : 'Resetar contador do cron'}
