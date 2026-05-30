@@ -307,6 +307,10 @@ export async function removePlanilha(id: number): Promise<void> {
     await fetch(`${API_BASE}/config/planilhas/${id}`, { method: "DELETE" });
 }
 
+export async function resetPlanilha(id: number): Promise<void> {
+    await fetch(`${API_BASE}/config/planilhas/${id}/reset`, { method: "POST" });
+}
+
 export type CategoriaExtra = {
     id: number;
     nome: string;

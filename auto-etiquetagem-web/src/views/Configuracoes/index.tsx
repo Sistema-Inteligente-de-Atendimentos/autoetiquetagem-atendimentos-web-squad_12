@@ -11,6 +11,7 @@ import {
   ativarPlanilha,
   desativarPlanilha,
   removePlanilha,
+  resetPlanilha,
   type CronStatusItem,
   type CategoriaExtra,
   type Planilha,
@@ -158,6 +159,14 @@ export default function Configuracoes() {
     } catch (e) { console.error(e); }
   }
 
+  async function handleResetPlanilha(p: Planilha) {
+    if (!confirm(`Resetar o contador de "${p.nome || p.url.slice(0, 40)}"? Ela será reprocessada do início no próximo disparo.`)) return;
+    try {
+      await resetPlanilha(p.id);
+      await carregarPlanilhas();
+    } catch (e) { console.error(e); }
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -205,6 +214,9 @@ export default function Configuracoes() {
               <div className="flex items-center gap-1 flex-shrink-0">
                 <button onClick={() => handleTogglePlanilha(p)} title={p.ativo ? 'Desativar' : 'Ativar'} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors text-gray-400">
                   {p.ativo ? <ToggleRight size={18} className="text-green-500" /> : <ToggleLeft size={18} />}
+                </button>
+                <button onClick={() => handleResetPlanilha(p)} title="Resetar contador desta planilha" className="p-1.5 rounded-lg hover:bg-amber-50 transition-colors text-gray-400 hover:text-amber-600">
+                  <RotateCcw size={15} />
                 </button>
                 <button onClick={() => handleRemovePlanilha(p)} title="Remover" className="p-1.5 rounded-lg hover:bg-red-50 transition-colors text-gray-400 hover:text-[#cc142d]">
                   <Trash2 size={15} />
