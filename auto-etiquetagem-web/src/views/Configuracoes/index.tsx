@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { RefreshCw, Settings, Clock, RotateCcw, CheckCircle, Tag, X, Plus, Lock, Sheet, Trash2, ToggleLeft, ToggleRight, ExternalLink } from 'lucide-react';
+import { RefreshCw, Settings, Clock, RotateCcw, CheckCircle, Tag, X, Plus, Lock, Sheet, Trash2, ToggleLeft, ToggleRight, ExternalLink, Moon, Sun } from 'lucide-react';
 import {
   getCronStatus,
   resetCron,
@@ -16,8 +16,10 @@ import {
   type CategoriaExtra,
   type Planilha,
 } from '../../services/api';
+import { useTheme } from '../../hooks/useTheme';
 
 export default function Configuracoes() {
+  const { tema, alternarTema } = useTheme();
   const [status, setStatus] = useState<CronStatusItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [resetando, setResetando] = useState(false);
@@ -175,6 +177,36 @@ export default function Configuracoes() {
           Configurações
         </h2>
         <p className="text-sm text-gray-500">Gerencie as regras e o processamento automático do sistema</p>
+      </div>
+
+      {/* Aparência */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h3 className="font-bold text-gray-800 flex items-center gap-2">
+              {tema === 'dark' ? <Moon size={18} className="text-gray-400" /> : <Sun size={18} className="text-gray-400" />}
+              Aparência
+            </h3>
+            <p className="text-xs text-gray-400 mt-1">
+              Alterne entre o tema claro e escuro. Sua preferência fica salva neste navegador.
+            </p>
+          </div>
+          <button
+            onClick={alternarTema}
+            className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors flex-shrink-0 ${
+              tema === 'dark' ? 'bg-[#cc142d]' : 'bg-gray-300'
+            }`}
+            title={tema === 'dark' ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
+          >
+            <span
+              className={`inline-flex h-5 w-5 items-center justify-center rounded-full bg-white transition-transform ${
+                tema === 'dark' ? 'translate-x-8' : 'translate-x-1'
+              }`}
+            >
+              {tema === 'dark' ? <Moon size={11} className="text-[#cc142d]" /> : <Sun size={11} className="text-amber-500" />}
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* Planilhas Google Sheets */}
