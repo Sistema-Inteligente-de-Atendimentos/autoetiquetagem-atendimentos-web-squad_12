@@ -54,6 +54,9 @@ export type AtendimentoListItem = {
     fechado_em: string | null;
     nota: number | null;
     comentario: string | null;
+    categoria: string | null;
+    sentimento: string | null;
+    criticidade: string | null;
     aprovado_como_exemplo: boolean;
 };
 
