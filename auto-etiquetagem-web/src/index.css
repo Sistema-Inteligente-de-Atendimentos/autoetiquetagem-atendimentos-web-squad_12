@@ -1,1 +1,59 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+  Modo escuro — overrides globais.
+  O app usa cores hardcoded (bg-white, text-gray-*, etc) em centenas de lugares.
+  Em vez de anotar cada elemento com dark:, redefinimos os tokens mais usados
+  sob a classe .dark. A especificidade (.dark .classe) sobrescreve a utility base.
+*/
+
+:root {
+  --dk-bg: #0f1117;        /* fundo da aplicação */
+  --dk-card: #1a1d2e;      /* cards / superfícies */
+  --dk-sub: #232838;       /* inputs, áreas secundárias */
+  --dk-border: #2a3042;    /* bordas */
+  --dk-strong: #e5e9f0;    /* texto forte */
+  --dk-medium: #b8c0cc;    /* texto médio */
+  --dk-soft: #8b94a3;      /* texto suave / labels */
+}
+
+/* Fundos */
+.dark .bg-\[\#f8f9fa\] { background-color: var(--dk-bg); }
+.dark .bg-white { background-color: var(--dk-card); }
+.dark .bg-gray-50 { background-color: var(--dk-sub); }
+.dark .bg-gray-50\/50 { background-color: var(--dk-sub); }
+.dark .bg-gray-100 { background-color: var(--dk-sub); }
+
+/* Hover de fundos */
+.dark .hover\:bg-gray-50:hover { background-color: var(--dk-sub); }
+.dark .hover\:bg-gray-50\/50:hover { background-color: #1f2433; }
+.dark .hover\:bg-gray-100:hover { background-color: #2c3247; }
+
+/* Textos */
+.dark .text-gray-900 { color: var(--dk-strong); }
+.dark .text-gray-800 { color: var(--dk-strong); }
+.dark .text-gray-700 { color: var(--dk-medium); }
+.dark .text-gray-600 { color: var(--dk-medium); }
+.dark .text-gray-500 { color: var(--dk-soft); }
+.dark .text-gray-400 { color: var(--dk-soft); }
+
+/* Bordas */
+.dark .border-gray-100 { border-color: var(--dk-border); }
+.dark .border-gray-200 { border-color: var(--dk-border); }
+.dark .divide-gray-200 > * + * { border-color: var(--dk-border); }
+
+/* Inputs e selects */
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: var(--dk-sub);
+  border-color: var(--dk-border);
+  color: var(--dk-strong);
+}
+.dark input::placeholder,
+.dark textarea::placeholder { color: var(--dk-soft); }
+
+/* code inline */
+.dark code { background-color: var(--dk-sub); color: var(--dk-medium); }
