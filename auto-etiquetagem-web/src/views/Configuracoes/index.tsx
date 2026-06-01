@@ -264,7 +264,7 @@ export default function Configuracoes() {
             <input type="text" value={novaUrl} onChange={(e) => { setNovaUrl(e.target.value); setErroPlanilha(null); }}
               placeholder="https://docs.google.com/spreadsheets/d/..."
               className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-300" />
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <input type="text" value={novaNome} onChange={(e) => setNovaNome(e.target.value)}
                 placeholder="Nome da planilha (opcional)"
                 className="p-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-300" />
