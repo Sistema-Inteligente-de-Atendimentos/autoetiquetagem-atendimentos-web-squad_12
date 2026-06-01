@@ -53,37 +53,39 @@ export default function Atendimentos() {
           <p className="text-sm text-gray-500">Monitore e audite as classificações realizadas pela IA</p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <a
-            href={getExportUrl()}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all border bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
-            title="Exportar todos os atendimentos em CSV"
-          >
-            <Download size={16} />
-            Exportar CSV
-          </a>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex items-center gap-3">
+            <a
+              href={getExportUrl()}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all border bg-white border-gray-200 text-gray-600 hover:bg-gray-50 whitespace-nowrap"
+              title="Exportar todos os atendimentos em CSV"
+            >
+              <Download size={16} />
+              Exportar CSV
+            </a>
 
-          <button
-            onClick={() => setApenasExemplos(!apenasExemplos)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all border ${
-              apenasExemplos
-                ? 'bg-amber-50 border-amber-300 text-amber-700'
-                : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
-            }`}
-            title="Mostrar apenas atendimentos aprovados como bom exemplo"
-          >
-            <Award size={16} />
-            Exemplos ({totalExemplos})
-          </button>
+            <button
+              onClick={() => setApenasExemplos(!apenasExemplos)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all border whitespace-nowrap ${
+                apenasExemplos
+                  ? 'bg-amber-50 border-amber-300 text-amber-700'
+                  : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+              }`}
+              title="Mostrar apenas atendimentos aprovados como bom exemplo"
+            >
+              <Award size={16} />
+              Exemplos ({totalExemplos})
+            </button>
+          </div>
 
-          <div className="relative">
+          <div className="relative w-full sm:w-auto">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
             <input
               type="text"
               placeholder="Buscar por protocolo, cliente ou conteúdo..."
               value={filtro}
               onChange={(e) => setFiltro(e.target.value)}
-              className="pl-10 pr-4 py-2 w-full md:w-96 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all"
+              className="pl-10 pr-4 py-2 w-full sm:w-72 lg:w-96 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all"
             />
           </div>
         </div>
