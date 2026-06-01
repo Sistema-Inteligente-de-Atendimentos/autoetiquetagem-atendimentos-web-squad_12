@@ -3,6 +3,21 @@ import { Link } from 'react-router-dom';
 import { getAtendimentos, getExportUrl, type AtendimentoListItem } from '../../services/api';
 import { Search, Eye, Clock, MessageSquare, Award, Download } from 'lucide-react';
 
+function corSentimento(s: string | null): string {
+  const v = (s || '').toLowerCase();
+  if (v.includes('positiv')) return 'bg-green-50 text-green-700 border-green-100';
+  if (v.includes('negativ')) return 'bg-red-50 text-red-700 border-red-100';
+  return 'bg-gray-100 text-gray-600 border-gray-200';
+}
+
+function corCriticidade(c: string | null): string {
+  const v = (c || '').toLowerCase();
+  if (v.includes('alta')) return 'text-red-600';
+  if (v.includes('média') || v.includes('media')) return 'text-amber-600';
+  if (v.includes('baixa')) return 'text-green-600';
+  return 'text-gray-400';
+}
+
 export default function Atendimentos() {
   const [dados, setDados] = useState<AtendimentoListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,7 +45,9 @@ export default function Atendimentos() {
       item.protocolo_id.toString().includes(filtro) ||
       (item.numero?.toLowerCase().includes(termo) ?? false) ||
       (item.cliente_nome?.toLowerCase().includes(termo) ?? false) ||
-      (item.comentario?.toLowerCase().includes(termo) ?? false)
+      (item.comentario?.toLowerCase().includes(termo) ?? false) ||
+      (item.categoria?.toLowerCase().includes(termo) ?? false) ||
+      (item.sentimento?.toLowerCase().includes(termo) ?? false)
     );
   });
 
@@ -99,6 +116,8 @@ export default function Atendimentos() {
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Protocolo</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Cliente</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Canal</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Categoria</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Sentimento</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Aberto em</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Nota</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Ações</th>
@@ -142,6 +161,27 @@ export default function Atendimentos() {
                           {item.canal || 'N/A'}
                         </span>
                       </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-gray-800">
+                            {item.categoria || '—'}
+                          </span>
+                          {item.criticidade && (
+                            <span className={`text-[10px] font-bold uppercase tracking-wide ${corCriticidade(item.criticidade)}`}>
+                              {item.criticidade}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        {item.sentimento ? (
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${corSentimento(item.sentimento)}`}>
+                            {item.sentimento}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 text-sm">—</span>
+                        )}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center text-sm text-gray-600">
                           <Clock size={14} className="mr-2 text-gray-400" />
@@ -179,7 +219,7 @@ export default function Atendimentos() {
                 })
               ) : (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center">
+                  <td colSpan={8} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center justify-center text-gray-400">
                       <MessageSquare size={40} className="mb-2 opacity-20" />
                       <p>Nenhum atendimento encontrado na base de dados.</p>
