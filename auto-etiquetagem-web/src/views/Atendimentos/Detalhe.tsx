@@ -246,18 +246,14 @@ export default function AtendimentoDetalheView() {
           )}
 
           {classificacao.qualidade && (
-            <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {[
-                ['Empatia', classificacao.qualidade.empatia],
-                ['Clareza', classificacao.qualidade.clareza],
-                ['Objetividade', classificacao.qualidade.objetividade],
-                ['Resolutividade', classificacao.qualidade.resolutividade],
-              ].map(([label, val]) => (
-                <div key={label as string} className="bg-gray-50 border border-gray-100 rounded-lg p-3 text-center">
-                  <p className="text-[10px] uppercase text-gray-400 font-bold tracking-widest">{label}</p>
-                  <p className="text-lg font-black text-gray-700 mt-1">{val != null ? val : '—'}</p>
-                </div>
-              ))}
+            <div className="mt-6">
+              <p className="text-[10px] uppercase text-gray-400 font-bold tracking-widest mb-3">Scores de Qualidade</p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <ScoreCircle label="Empatia" valor={classificacao.qualidade.empatia} />
+                <ScoreCircle label="Clareza" valor={classificacao.qualidade.clareza} />
+                <ScoreCircle label="Objetividade" valor={classificacao.qualidade.objetividade} />
+                <ScoreCircle label="Resolutividade" valor={classificacao.qualidade.resolutividade} />
+              </div>
             </div>
           )}
         </div>
@@ -395,6 +391,34 @@ function InfoRow({ label, value }: { label: string; value: string }) {
     <div>
       <p className="text-[10px] uppercase text-gray-400 tracking-widest font-bold">{label}</p>
       <p className="text-sm text-gray-800">{value}</p>
+    </div>
+  );
+}
+
+function ScoreCircle({ label, valor }: { label: string; valor?: number }) {
+  const v = typeof valor === 'number' ? valor : 0;
+  const pct = Math.max(0, Math.min(100, (v / 10) * 100));
+  const cor = v >= 7 ? '#10b981' : v >= 5 ? '#f59e0b' : '#ef4444';
+
+  const raio = 26;
+  const circ = 2 * Math.PI * raio;
+  const preenchido = (pct / 100) * circ;
+
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <div className="relative w-[68px] h-[68px]">
+        <svg className="w-full h-full -rotate-90" viewBox="0 0 64 64">
+          <circle cx="32" cy="32" r={raio} fill="none" stroke="#e5e7eb" strokeWidth="5" className="dark:stroke-[#2a3042]" />
+          <circle
+            cx="32" cy="32" r={raio} fill="none" stroke={cor} strokeWidth="5" strokeLinecap="round"
+            strokeDasharray={`${preenchido} ${circ}`}
+          />
+        </svg>
+        <span className="absolute inset-0 flex items-center justify-center text-base font-black text-gray-800">
+          {typeof valor === 'number' ? valor : '—'}
+        </span>
+      </div>
+      <span className="text-xs text-gray-500 font-medium">{label}</span>
     </div>
   );
 }
