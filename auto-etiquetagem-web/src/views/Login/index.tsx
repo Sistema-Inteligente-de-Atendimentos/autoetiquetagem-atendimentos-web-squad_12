@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { LogIn, UserPlus } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import logoImg from '../../assets/logo.png';
+import chipciaImg from '../../assets/chipcia-login.png';
 
 export default function Login() {
   const { login, register } = useAuth();
@@ -30,18 +31,19 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f8f9fa] dark:bg-[#0f1117] p-4">
-      <div className="w-full max-w-md">
-        <div className="flex justify-center mb-8">
-          <img src={logoImg} alt="Logo" className="h-12 w-auto object-contain" />
-        </div>
+    <div className="min-h-screen flex bg-[#f8f9fa] dark:bg-[#0f1117]">
+      {/* Lado esquerdo — formulário */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-10">
+        <div className="w-full max-w-md">
+          <div className="flex justify-center lg:justify-start mb-8">
+            <img src={logoImg} alt="Logo Chip&Cia" className="h-11 w-auto object-contain" />
+          </div>
 
-        <div className="bg-white dark:bg-[#1a1d2e] rounded-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-8">
-          <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100 text-center mb-1">
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-1">
             {modo === 'login' ? 'Entrar' : 'Criar conta'}
           </h1>
-          <p className="text-sm text-gray-500 text-center mb-6">
-            Sistema de Auto-Etiquetagem · Squad 12
+          <p className="text-sm text-gray-500 mb-8">
+            Sistema de Auto-Etiquetagem de Atendimentos
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -85,7 +87,7 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="mt-5 text-center text-sm text-gray-500">
+          <div className="mt-6 text-center text-sm text-gray-500">
             {modo === 'login' ? (
               <>Não tem conta?{' '}
                 <button onClick={() => { setModo('registro'); setErro(null); }} className="text-[#cc142d] font-semibold hover:underline">
@@ -100,6 +102,18 @@ export default function Login() {
               </>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Lado direito — imagem (oculto no mobile) */}
+      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
+        <img src={chipciaImg} alt="Chip&Cia" className="absolute inset-0 w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/30" />
+        <div className="relative h-full flex flex-col items-center justify-end text-center px-12 pb-16">
+          <h2 className="text-white text-3xl font-bold tracking-wide drop-shadow-lg">CHIP&CIA</h2>
+          <p className="text-white/85 text-sm mt-2 max-w-xs drop-shadow">
+            Soluções Corporativas · Classificação inteligente de atendimentos
+          </p>
         </div>
       </div>
     </div>
