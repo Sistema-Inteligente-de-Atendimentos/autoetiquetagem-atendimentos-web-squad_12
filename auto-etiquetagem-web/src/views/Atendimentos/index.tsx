@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAtendimentos, getExportUrl, type AtendimentoListItem } from '../../services/api';
-import { Search, Eye, Clock, MessageSquare, Award, Download } from 'lucide-react';
+import { Search, Eye, Clock, MessageSquare, Award, Download, Bot, User } from 'lucide-react';
 
 function corSentimento(s: string | null): string {
   const v = (s || '').toLowerCase();
@@ -118,6 +118,7 @@ export default function Atendimentos() {
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Canal</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Categoria</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Sentimento</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Análise</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Aberto em</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Nota</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Ações</th>
@@ -183,6 +184,17 @@ export default function Atendimentos() {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
+                        {(item.analisado_por || 'IA') === 'IA' ? (
+                          <span className="inline-flex items-center gap-1 text-xs text-gray-500">
+                            <Bot size={13} className="text-blue-500" /> IA
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-xs text-gray-700" title={`Corrigido por ${item.analisado_por}`}>
+                            <User size={13} className="text-[#cc142d]" /> {item.analisado_por}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center text-sm text-gray-600">
                           <Clock size={14} className="mr-2 text-gray-400" />
                           {item.aberto_em
@@ -219,7 +231,7 @@ export default function Atendimentos() {
                 })
               ) : (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center">
+                  <td colSpan={9} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center justify-center text-gray-400">
                       <MessageSquare size={40} className="mb-2 opacity-20" />
                       <p>Nenhum atendimento encontrado na base de dados.</p>

@@ -1,21 +1,29 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, User, MessageSquare, Star, Clock, Award, X, Tag } from 'lucide-react';
+import { ArrowLeft, User, MessageSquare, Star, Clock, Award, X, Tag, Pencil, Save, Bot } from 'lucide-react';
 import {
   getAtendimentoDetalhe,
   aprovarComoExemplo,
   removerExemplo,
+  corrigirClassificacao,
   type AtendimentoDetalhe,
+  type CorrecaoClassificacao,
 } from '../../services/api';
+
+const CATEGORIAS = ['Financeiro', 'Técnico', 'Comercial', 'Logística', 'Reclamação', 'Elogio', 'Cancelamento', 'Dúvida', 'Outros'];
+const SENTIMENTOS = ['Positivo', 'Neutro', 'Negativo'];
+const CRITICIDADES = ['Baixa', 'Média', 'Alta'];
 
 export default function AtendimentoDetalheView() {
   const { protocoloId } = useParams<{ protocoloId: string }>();
   const [detalhe, setDetalhe] = useState<AtendimentoDetalhe | null>(null);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
-  const [revisor, setRevisor] = useState('');
   const [observacao, setObservacao] = useState('');
   const [salvando, setSalvando] = useState(false);
+
+  const [editando, setEditando] = useState(false);
+  const [form, setForm] = useState<CorrecaoClassificacao>({});
 
   useEffect(() => {
     if (!protocoloId) return;
@@ -35,19 +43,49 @@ export default function AtendimentoDetalheView() {
 
   async function handleAprovar() {
     if (!protocoloId) return;
-    if (!revisor.trim()) {
-      alert('Informe o nome do revisor');
-      return;
-    }
     try {
       setSalvando(true);
-      await aprovarComoExemplo(protocoloId, revisor.trim(), observacao.trim() || undefined);
+      await aprovarComoExemplo(protocoloId, observacao.trim() || undefined);
       const atualizado = await getAtendimentoDetalhe(protocoloId);
       setDetalhe(atualizado);
       setObservacao('');
     } catch (e) {
       console.error(e);
       alert('Erro ao aprovar como exemplo');
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  function iniciarEdicao() {
+    const c = detalhe?.classificacao;
+    setForm({
+      categoria: c?.categoria,
+      intencao: c?.intencao,
+      sentimento: c?.sentimento,
+      criticidade: c?.criticidade,
+      resumo: Array.isArray(c?.resumo) ? c?.resumo.join(' ') : (c?.resumo as string | undefined),
+      qualidade: {
+        empatia: c?.qualidade?.empatia,
+        clareza: c?.qualidade?.clareza,
+        objetividade: c?.qualidade?.objetividade,
+        resolutividade: c?.qualidade?.resolutividade,
+      },
+    });
+    setEditando(true);
+  }
+
+  async function handleSalvarCorrecao() {
+    if (!protocoloId) return;
+    try {
+      setSalvando(true);
+      await corrigirClassificacao(protocoloId, form);
+      const atualizado = await getAtendimentoDetalhe(protocoloId);
+      setDetalhe(atualizado);
+      setEditando(false);
+    } catch (e) {
+      console.error(e);
+      alert(e instanceof Error ? e.message : 'Erro ao salvar correção');
     } finally {
       setSalvando(false);
     }
@@ -194,65 +232,147 @@ export default function AtendimentoDetalheView() {
 
       {classificacao && (
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-          <h3 className="font-bold text-gray-800 flex items-center gap-2 mb-4">
-            <Tag size={18} className="text-gray-400" /> Classificação da IA
-          </h3>
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div>
+              <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                <Tag size={18} className="text-gray-400" /> Classificação
+              </h3>
+              {avaliacao && (
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  {(avaliacao.analisado_por || 'IA') === 'IA' ? (
+                    <span className="inline-flex items-center gap-1 text-xs text-gray-500">
+                      <Bot size={13} className="text-blue-500" />
+                      Analisado pela <strong className="text-gray-700">IA</strong>
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-xs text-gray-500">
+                      <User size={13} className="text-[#cc142d]" />
+                      Corrigido por <strong className="text-gray-700">{avaliacao.analisado_por}</strong>
+                    </span>
+                  )}
+                  {(avaliacao.corrigido_em || avaliacao.avaliado_em) && (
+                    <span className="text-xs text-gray-400">
+                      · {new Date((avaliacao.corrigido_em || avaliacao.avaliado_em)!).toLocaleString('pt-BR')}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
-              <p className="text-[10px] uppercase text-gray-400 font-bold tracking-widest mb-1">Categoria</p>
-              <p className="text-sm font-semibold text-gray-800">{classificacao.categoria || '—'}</p>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase text-gray-400 font-bold tracking-widest mb-1">Intenção</p>
-              <p className="text-sm font-semibold text-gray-800">{classificacao.intencao || '—'}</p>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase text-gray-400 font-bold tracking-widest mb-1">Sentimento</p>
-              {classificacao.sentimento ? (
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${corSentimento(classificacao.sentimento)}`}>
-                  {classificacao.sentimento}
-                </span>
-              ) : <span className="text-sm text-gray-400">—</span>}
-            </div>
-            <div>
-              <p className="text-[10px] uppercase text-gray-400 font-bold tracking-widest mb-1">Criticidade</p>
-              {classificacao.criticidade ? (
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${corCriticidade(classificacao.criticidade)}`}>
-                  {classificacao.criticidade}
-                </span>
-              ) : <span className="text-sm text-gray-400">—</span>}
-            </div>
+            {!editando ? (
+              <button
+                onClick={iniciarEdicao}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-200 text-gray-600 hover:bg-gray-50 transition-all flex-shrink-0"
+              >
+                <Pencil size={14} /> Corrigir
+              </button>
+            ) : (
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button onClick={() => setEditando(false)} className="px-3 py-1.5 rounded-lg text-sm border border-gray-200 text-gray-600 hover:bg-gray-50">
+                  Cancelar
+                </button>
+                <button onClick={handleSalvarCorrecao} disabled={salvando}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold bg-[#cc142d] hover:bg-[#b01227] text-white disabled:opacity-50">
+                  <Save size={14} /> {salvando ? 'Salvando...' : 'Salvar'}
+                </button>
+              </div>
+            )}
           </div>
 
-          {classificacao.sla_urgencia && (
-            <div className="mt-4">
-              <p className="text-[10px] uppercase text-gray-400 font-bold tracking-widest mb-1">SLA / Urgência</p>
-              <p className="text-sm text-gray-700">{classificacao.sla_urgencia}</p>
-            </div>
-          )}
-
-          {topicos.length > 0 && (
-            <div className="mt-4">
-              <p className="text-[10px] uppercase text-gray-400 font-bold tracking-widest mb-2">Tópicos</p>
-              <div className="flex flex-wrap gap-2">
-                {topicos.map((t, i) => (
-                  <span key={i} className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
-                    {t}
-                  </span>
-                ))}
+          {!editando ? (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <p className="text-[10px] uppercase text-gray-400 font-bold tracking-widest mb-1">Categoria</p>
+                  <p className="text-sm font-semibold text-gray-800">{classificacao.categoria || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase text-gray-400 font-bold tracking-widest mb-1">Intenção</p>
+                  <p className="text-sm font-semibold text-gray-800">{classificacao.intencao || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase text-gray-400 font-bold tracking-widest mb-1">Sentimento</p>
+                  {classificacao.sentimento ? (
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${corSentimento(classificacao.sentimento)}`}>
+                      {classificacao.sentimento}
+                    </span>
+                  ) : <span className="text-sm text-gray-400">—</span>}
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase text-gray-400 font-bold tracking-widest mb-1">Criticidade</p>
+                  {classificacao.criticidade ? (
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${corCriticidade(classificacao.criticidade)}`}>
+                      {classificacao.criticidade}
+                    </span>
+                  ) : <span className="text-sm text-gray-400">—</span>}
+                </div>
               </div>
-            </div>
-          )}
 
-          {classificacao.qualidade && (
-            <div className="mt-6">
-              <p className="text-[10px] uppercase text-gray-400 font-bold tracking-widest mb-3">Scores de Qualidade</p>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <ScoreCircle label="Empatia" valor={classificacao.qualidade.empatia} />
-                <ScoreCircle label="Clareza" valor={classificacao.qualidade.clareza} />
-                <ScoreCircle label="Objetividade" valor={classificacao.qualidade.objetividade} />
-                <ScoreCircle label="Resolutividade" valor={classificacao.qualidade.resolutividade} />
+              {classificacao.sla_urgencia && (
+                <div className="mt-4">
+                  <p className="text-[10px] uppercase text-gray-400 font-bold tracking-widest mb-1">SLA / Urgência</p>
+                  <p className="text-sm text-gray-700">{classificacao.sla_urgencia}</p>
+                </div>
+              )}
+
+              {topicos.length > 0 && (
+                <div className="mt-4">
+                  <p className="text-[10px] uppercase text-gray-400 font-bold tracking-widest mb-2">Tópicos</p>
+                  <div className="flex flex-wrap gap-2">
+                    {topicos.map((t, i) => (
+                      <span key={i} className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {classificacao.qualidade && (
+                <div className="mt-6">
+                  <p className="text-[10px] uppercase text-gray-400 font-bold tracking-widest mb-3">Scores de Qualidade</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <ScoreCircle label="Empatia" valor={classificacao.qualidade.empatia} />
+                    <ScoreCircle label="Clareza" valor={classificacao.qualidade.clareza} />
+                    <ScoreCircle label="Objetividade" valor={classificacao.qualidade.objetividade} />
+                    <ScoreCircle label="Resolutividade" valor={classificacao.qualidade.resolutividade} />
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <CampoSelect label="Categoria" value={form.categoria} opcoes={CATEGORIAS}
+                  onChange={(v) => setForm({ ...form, categoria: v })} />
+                <CampoSelect label="Sentimento" value={form.sentimento} opcoes={SENTIMENTOS}
+                  onChange={(v) => setForm({ ...form, sentimento: v })} />
+                <CampoSelect label="Criticidade" value={form.criticidade} opcoes={CRITICIDADES}
+                  onChange={(v) => setForm({ ...form, criticidade: v })} />
+                <div>
+                  <label className="text-[10px] uppercase text-gray-400 font-bold tracking-widest">Intenção</label>
+                  <input type="text" value={form.intencao || ''} onChange={(e) => setForm({ ...form, intencao: e.target.value })}
+                    className="w-full mt-1 p-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20" />
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] uppercase text-gray-400 font-bold tracking-widest">Resumo</label>
+                <textarea value={form.resumo || ''} onChange={(e) => setForm({ ...form, resumo: e.target.value })} rows={2}
+                  className="w-full mt-1 p-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20 resize-none" />
+              </div>
+              <div>
+                <p className="text-[10px] uppercase text-gray-400 font-bold tracking-widest mb-2">Scores de Qualidade (0 a 10)</p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {(['empatia', 'clareza', 'objetividade', 'resolutividade'] as const).map((campo) => (
+                    <div key={campo}>
+                      <label className="text-xs text-gray-500 capitalize">{campo}</label>
+                      <input type="number" min={0} max={10} step={0.5}
+                        value={form.qualidade?.[campo] ?? ''}
+                        onChange={(e) => setForm({ ...form, qualidade: { ...form.qualidade, [campo]: e.target.value === '' ? undefined : Number(e.target.value) } })}
+                        className="w-full mt-1 p-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-red-500/20" />
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
@@ -348,31 +468,19 @@ export default function AtendimentoDetalheView() {
                 Se esta classificação está correta, aprove como exemplo. A IA usará casos
                 aprovados como referência para melhorar futuras classificações.
               </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-semibold text-gray-700">Revisor</label>
-                  <input
-                    type="text"
-                    value={revisor}
-                    onChange={(e) => setRevisor(e.target.value)}
-                    placeholder="Seu nome"
-                    className="w-full mt-1 p-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-gray-700">Observação (opcional)</label>
-                  <input
-                    type="text"
-                    value={observacao}
-                    onChange={(e) => setObservacao(e.target.value)}
-                    placeholder="Por que é um bom exemplo?"
-                    className="w-full mt-1 p-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30"
-                  />
-                </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-700">Observação (opcional)</label>
+                <input
+                  type="text"
+                  value={observacao}
+                  onChange={(e) => setObservacao(e.target.value)}
+                  placeholder="Por que é um bom exemplo?"
+                  className="w-full mt-1 p-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+                />
               </div>
               <button
                 onClick={handleAprovar}
-                disabled={salvando || !revisor.trim()}
+                disabled={salvando}
                 className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Award size={18} />
@@ -391,6 +499,22 @@ function InfoRow({ label, value }: { label: string; value: string }) {
     <div>
       <p className="text-[10px] uppercase text-gray-400 tracking-widest font-bold">{label}</p>
       <p className="text-sm text-gray-800">{value}</p>
+    </div>
+  );
+}
+
+function CampoSelect({ label, value, opcoes, onChange }: { label: string; value?: string; opcoes: string[]; onChange: (v: string) => void }) {
+  return (
+    <div>
+      <label className="text-[10px] uppercase text-gray-400 font-bold tracking-widest">{label}</label>
+      <select
+        value={value || ''}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full mt-1 p-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500/20"
+      >
+        <option value="">—</option>
+        {opcoes.map((o) => <option key={o} value={o}>{o}</option>)}
+      </select>
     </div>
   );
 }

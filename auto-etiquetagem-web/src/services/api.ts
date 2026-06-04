@@ -1,5 +1,57 @@
 export const API_BASE = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000";
 
+// ── Auth: token storage + headers ─────────────────────────────────────────────
+const TOKEN_KEY = "auth_token";
+
+export function getToken(): string | null {
+    return localStorage.getItem(TOKEN_KEY);
+}
+export function setToken(token: string) {
+    localStorage.setItem(TOKEN_KEY, token);
+}
+export function clearToken() {
+    localStorage.removeItem(TOKEN_KEY);
+}
+
+function authHeaders(): Record<string, string> {
+    const t = getToken();
+    return t ? { Authorization: `Bearer ${t}` } : {};
+}
+
+export type Usuario = { id: number; nome: string; email: string };
+
+export async function login(email: string, senha: string): Promise<{ token: string; usuario: Usuario }> {
+    const r = await fetch(`${API_BASE}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, senha }),
+    });
+    if (!r.ok) {
+        const err = await r.json().catch(() => null);
+        throw new Error(err?.detail || "Falha no login");
+    }
+    return r.json();
+}
+
+export async function register(nome: string, email: string, senha: string): Promise<{ token: string; usuario: Usuario }> {
+    const r = await fetch(`${API_BASE}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nome, email, senha }),
+    });
+    if (!r.ok) {
+        const err = await r.json().catch(() => null);
+        throw new Error(err?.detail || "Falha no cadastro");
+    }
+    return r.json();
+}
+
+export async function getMe(): Promise<Usuario> {
+    const r = await fetch(`${API_BASE}/auth/me`, { headers: { ...authHeaders() } });
+    if (!r.ok) throw new Error("Não autenticado");
+    return r.json();
+}
+
 export function getExportUrl(): string {
     return `${API_BASE}/atendimentos/export`;
 }
@@ -58,6 +110,8 @@ export type AtendimentoListItem = {
     sentimento: string | null;
     criticidade: string | null;
     aprovado_como_exemplo: boolean;
+    analisado_por: string | null;
+    avaliado_em: string | null;
 };
 
 export type MensagemDTO = {
@@ -85,6 +139,8 @@ export type AvaliacaoDTO = {
     aprovado_por: string | null;
     aprovado_em: string | null;
     observacao_aprovacao: string | null;
+    analisado_por: string | null;
+    corrigido_em: string | null;
 };
 
 export type ClassificacaoIA = {
@@ -169,13 +225,12 @@ export async function getAtendimentoDetalhe(protocoloId: number | string): Promi
 
 export async function aprovarComoExemplo(
     protocoloId: number | string,
-    revisor: string,
     observacao?: string,
 ): Promise<{ status: string; avaliacao_id: number; aprovado_por: string; aprovado_em: string }> {
     const response = await fetch(`${API_BASE}/atendimentos/${protocoloId}/aprovar-exemplo`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ revisor, observacao }),
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify({ observacao }),
     });
 
     if (!response.ok) {
@@ -190,11 +245,43 @@ export async function removerExemplo(
 ): Promise<{ status: string; avaliacao_id: number }> {
     const response = await fetch(`${API_BASE}/atendimentos/${protocoloId}/remover-exemplo`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders() },
     });
 
     if (!response.ok) {
         throw new Error("Erro ao remover aprovação");
+    }
+
+    return response.json();
+}
+
+export type CorrecaoClassificacao = {
+    categoria?: string;
+    intencao?: string;
+    sentimento?: string;
+    criticidade?: string;
+    resumo?: string;
+    qualidade?: {
+        empatia?: number;
+        clareza?: number;
+        objetividade?: number;
+        resolutividade?: number;
+    };
+};
+
+export async function corrigirClassificacao(
+    protocoloId: number | string,
+    correcao: CorrecaoClassificacao,
+): Promise<{ status: string; analisado_por: string; corrigido_em: string; classificacao: ClassificacaoIA }> {
+    const response = await fetch(`${API_BASE}/atendimentos/${protocoloId}/classificacao`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify(correcao),
+    });
+
+    if (!response.ok) {
+        const err = await response.json().catch(() => null);
+        throw new Error(err?.detail || "Erro ao corrigir classificação");
     }
 
     return response.json();
