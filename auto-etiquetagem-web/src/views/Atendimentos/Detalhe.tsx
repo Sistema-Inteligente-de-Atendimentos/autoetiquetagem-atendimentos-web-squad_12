@@ -368,7 +368,18 @@ export default function AtendimentoDetalheView() {
                       <label className="text-xs text-gray-500 capitalize">{campo}</label>
                       <input type="number" min={0} max={10} step={0.5}
                         value={form.qualidade?.[campo] ?? ''}
-                        onChange={(e) => setForm({ ...form, qualidade: { ...form.qualidade, [campo]: e.target.value === '' ? undefined : Number(e.target.value) } })}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          let val: number | undefined;
+                          if (raw === '') {
+                            val = undefined;
+                          } else {
+                            val = Number(raw);
+                            if (Number.isNaN(val)) val = undefined;
+                            else val = Math.max(0, Math.min(10, val));
+                          }
+                          setForm({ ...form, qualidade: { ...form.qualidade, [campo]: val } });
+                        }}
                         className="w-full mt-1 p-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-red-500/20" />
                     </div>
                   ))}
@@ -520,8 +531,8 @@ function CampoSelect({ label, value, opcoes, onChange }: { label: string; value?
 }
 
 function ScoreCircle({ label, valor }: { label: string; valor?: number }) {
-  const v = typeof valor === 'number' ? valor : 0;
-  const pct = Math.max(0, Math.min(100, (v / 10) * 100));
+  const v = typeof valor === 'number' ? Math.max(0, Math.min(10, valor)) : 0;
+  const pct = (v / 10) * 100;
   const cor = v >= 7 ? '#10b981' : v >= 5 ? '#f59e0b' : '#ef4444';
 
   const raio = 26;
@@ -539,7 +550,7 @@ function ScoreCircle({ label, valor }: { label: string; valor?: number }) {
           />
         </svg>
         <span className="absolute inset-0 flex items-center justify-center text-base font-black text-gray-800">
-          {typeof valor === 'number' ? valor : '—'}
+          {typeof valor === 'number' ? v : '—'}
         </span>
       </div>
       <span className="text-xs text-gray-500 font-medium">{label}</span>
