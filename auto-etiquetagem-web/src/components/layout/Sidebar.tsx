@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, ListTree, Database, Settings, LogOut, X } from 'lucide-react';
 import logoImg from '../../assets/logo.png';
+import { useAuth } from '../../hooks/useAuth';
 
 type SidebarProps = {
   aberta: boolean;
@@ -9,6 +10,7 @@ type SidebarProps = {
 
 export const Sidebar = ({ aberta, onClose }: SidebarProps) => {
   const location = useLocation();
+  const { usuario, logout } = useAuth();
 
   return (
     <>
@@ -50,10 +52,21 @@ export const Sidebar = ({ aberta, onClose }: SidebarProps) => {
           <NavItem to="/configuracoes" icon={<Settings size={18} />} label="Configurações" active={location.pathname === '/configuracoes'} onClick={onClose} />
         </nav>
 
-        <button className="flex items-center gap-3 px-4 py-3 hover:text-white transition-colors mt-auto border-t border-gray-800 text-sm">
-          <LogOut size={18} />
-          <span>Signout</span>
-        </button>
+        <div className="mt-auto border-t border-gray-800 pt-3">
+          {usuario && (
+            <div className="px-4 py-2 mb-1">
+              <p className="text-sm font-semibold text-white truncate">{usuario.nome}</p>
+              <p className="text-xs text-gray-500 truncate">{usuario.email}</p>
+            </div>
+          )}
+          <button
+            onClick={logout}
+            className="flex items-center gap-3 px-4 py-3 hover:text-white transition-colors text-sm w-full"
+          >
+            <LogOut size={18} />
+            <span>Sair</span>
+          </button>
+        </div>
       </aside>
     </>
   );
