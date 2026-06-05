@@ -1,24 +1,26 @@
 import { useEffect, useState } from 'react';
-import { FileText, TrendingUp, MessageSquare, BarChart as BarChartIcon, PieChart as PieChartIcon, Award } from 'lucide-react';
+import { FileText, TrendingUp, MessageSquare, BarChart as BarChartIcon, PieChart as PieChartIcon, Award, Target } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
 } from 'recharts';
 import { StatCard } from '../../components/ui/StatCard';
-import { getDashboardStats, type DashboardStats } from '../../services/api';
+import { getDashboardStats, getAcuracia, type DashboardStats, type AcuraciaStats } from '../../services/api';
 
 const PIE_COLORS = ['#cc142d', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899'];
 
 export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [acuracia, setAcuracia] = useState<AcuraciaStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
     async function carregar() {
       try {
-        const data = await getDashboardStats();
+        const [data, acc] = await Promise.all([getDashboardStats(), getAcuracia()]);
         setStats(data);
+        setAcuracia(acc);
       } catch (e) {
         console.error(e);
         setErro("Falha ao carregar métricas.");
@@ -90,6 +92,55 @@ export default function Dashboard() {
           iconColor="text-amber-500"
         />
       </div>
+
+      {acuracia && acuracia.total_revisados > 0 && (
+        <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+          <div className="flex items-center gap-2 mb-1">
+            <Target size={18} className="text-gray-400" />
+            <h3 className="font-bold text-gray-800">Acurácia da IA</h3>
+          </div>
+          <p className="text-xs text-gray-400 mb-5 ml-7">
+            Baseada em {acuracia.total_revisados} atendimento{acuracia.total_revisados === 1 ? '' : 's'} revisado{acuracia.total_revisados === 1 ? '' : 's'} por humanos
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-6 items-center">
+            <div className="text-center md:px-6">
+              <p
+                className={`text-5xl font-black ${
+                  acuracia.acuracia >= 0.8 ? 'text-green-500' : acuracia.acuracia >= 0.5 ? 'text-amber-500' : 'text-red-500'
+                }`}
+              >
+                {Math.round(acuracia.acuracia * 100)}%
+              </p>
+              <p className="text-xs text-gray-400 mt-1">taxa de acerto</p>
+              <p className="text-xs text-gray-500 mt-2">
+                {acuracia.acertos} acertos · {acuracia.corrigidos} corrigidos
+              </p>
+            </div>
+
+            <div>
+              <p className="text-[10px] uppercase text-gray-400 font-bold tracking-widest mb-2">
+                Onde a IA mais precisou de correção
+              </p>
+              <div className="space-y-2">
+                {(['categoria', 'sentimento', 'criticidade'] as const).map((campo) => {
+                  const erros = acuracia.erros_por_campo[campo] || 0;
+                  const pct = acuracia.corrigidos > 0 ? (erros / acuracia.corrigidos) * 100 : 0;
+                  return (
+                    <div key={campo} className="flex items-center gap-3">
+                      <span className="text-xs text-gray-600 capitalize w-24">{campo}</span>
+                      <div className="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
+                        <div className="h-full rounded-full bg-[#cc142d]" style={{ width: `${pct}%` }} />
+                      </div>
+                      <span className="text-xs font-bold text-gray-700 w-8 text-right">{erros}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">

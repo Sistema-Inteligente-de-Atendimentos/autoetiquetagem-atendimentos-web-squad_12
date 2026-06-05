@@ -339,6 +339,27 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     return response.json();
 }
 
+export type AcuraciaStats = {
+    total_revisados: number;
+    acertos: number;
+    corrigidos: number;
+    acuracia: number;
+    erros_por_campo: { categoria: number; sentimento: number; criticidade: number };
+};
+
+export async function getAcuracia(): Promise<AcuraciaStats> {
+    const response = await fetch(`${API_BASE}/dashboard/acuracia`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) {
+        throw new Error("Erro ao carregar acurácia");
+    }
+
+    return response.json();
+}
+
 export type CronStatusItem = {
     fonte: string;
     ultima_linha: number;
