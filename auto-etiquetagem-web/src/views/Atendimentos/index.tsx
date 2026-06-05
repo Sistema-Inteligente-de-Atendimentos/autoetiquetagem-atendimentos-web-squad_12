@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getAtendimentos, getExportUrl, type AtendimentoListItem } from '../../services/api';
-import { Search, Eye, Clock, MessageSquare, Award, Download, Bot, User } from 'lucide-react';
+import { getAtendimentos, getExportUrl, getDivergencias, type AtendimentoListItem, type Divergencia } from '../../services/api';
+import { Search, Eye, Clock, MessageSquare, Award, Download, Bot, User, GitCompareArrows, ArrowRight } from 'lucide-react';
 import { SeletorPeriodo, type Periodo } from '../../components/ui/SeletorPeriodo';
 
 function corSentimento(s: string | null): string {
@@ -25,12 +25,15 @@ export default function Atendimentos() {
   const [filtro, setFiltro] = useState("");
   const [apenasExemplos, setApenasExemplos] = useState(false);
   const [periodo, setPeriodo] = useState<Periodo>({ inicio: null, fim: null });
+  const [modoDivergencias, setModoDivergencias] = useState(false);
+  const [divergencias, setDivergencias] = useState<Divergencia[]>([]);
 
   useEffect(() => {
     async function carregarHistorico() {
       try {
-        const response = await getAtendimentos();
-        setDados(response);
+        const [resp, divs] = await Promise.all([getAtendimentos(), getDivergencias()]);
+        setDados(resp);
+        setDivergencias(divs);
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
       } finally {
@@ -103,6 +106,19 @@ export default function Atendimentos() {
               <Award size={16} />
               Exemplos ({totalExemplos})
             </button>
+
+            <button
+              onClick={() => setModoDivergencias(!modoDivergencias)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all border whitespace-nowrap ${
+                modoDivergencias
+                  ? 'bg-red-50 border-red-300 text-[#cc142d]'
+                  : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+              }`}
+              title="Ver correções feitas por humanos (IA vs corrigido)"
+            >
+              <GitCompareArrows size={16} />
+              Divergências ({divergencias.length})
+            </button>
           </div>
 
           <div className="relative w-full sm:w-auto">
@@ -118,6 +134,10 @@ export default function Atendimentos() {
         </div>
       </div>
 
+      {modoDivergencias ? (
+        <DivergenciasView divergencias={divergencias} />
+      ) : (
+      <>
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <SeletorPeriodo value={periodo} onChange={setPeriodo} />
         <span className="text-xs text-gray-400">
@@ -260,6 +280,67 @@ export default function Atendimentos() {
           </table>
         </div>
       </div>
+      </>
+      )}
+    </div>
+  );
+}
+
+function DivergenciasView({ divergencias }: { divergencias: Divergencia[] }) {
+  if (divergencias.length === 0) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+        <GitCompareArrows size={40} className="mx-auto mb-3 text-gray-300" />
+        <p className="text-gray-500 font-medium">Nenhuma divergência ainda</p>
+        <p className="text-sm text-gray-400 mt-1">
+          Quando um revisor corrigir a classificação da IA, a comparação aparece aqui.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-gray-500">
+        {divergencias.length} atendimento{divergencias.length === 1 ? '' : 's'} corrigido{divergencias.length === 1 ? '' : 's'} por humanos — comparando o que a IA classificou com a correção.
+      </p>
+
+      {divergencias.map((d) => (
+        <div key={d.protocolo_id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="flex items-center justify-between gap-3 px-5 py-3 bg-gray-50 border-b border-gray-200 flex-wrap">
+            <div className="flex items-center gap-3">
+              <span className="font-mono text-sm font-bold text-gray-900">#{d.protocolo_id}</span>
+              {d.cliente_nome && <span className="text-sm text-gray-600">{d.cliente_nome}</span>}
+              <span className="inline-flex items-center gap-1 text-xs text-[#cc142d]">
+                <User size={12} /> {d.analisado_por}
+              </span>
+              {d.corrigido_em && (
+                <span className="text-xs text-gray-400">{new Date(d.corrigido_em).toLocaleString('pt-BR')}</span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium bg-red-50 text-[#cc142d] border border-red-100 rounded-full px-2.5 py-0.5">
+                {d.total_mudancas} mudança{d.total_mudancas === 1 ? '' : 's'}
+              </span>
+              <Link to={`/atendimentos/${d.protocolo_id}`} title="Ver detalhe"
+                className="p-1.5 text-gray-400 hover:text-[#cc142d] hover:bg-red-50 rounded-lg transition-all">
+                <Eye size={16} />
+              </Link>
+            </div>
+          </div>
+
+          <div className="divide-y divide-gray-100">
+            {d.campos.filter(c => c.mudou).map((c) => (
+              <div key={c.campo} className="grid grid-cols-[7rem_1fr_auto_1fr] items-center gap-3 px-5 py-2.5">
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">{c.campo}</span>
+                <span className="text-sm text-gray-400 line-through truncate" title={c.ia}>{c.ia || '—'}</span>
+                <ArrowRight size={14} className="text-[#cc142d]" />
+                <span className="text-sm font-semibold text-gray-800 truncate" title={c.corrigido}>{c.corrigido || '—'}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
