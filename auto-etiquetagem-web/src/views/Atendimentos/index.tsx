@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAtendimentos, getExportUrl, type AtendimentoListItem } from '../../services/api';
 import { Search, Eye, Clock, MessageSquare, Award, Download, Bot, User } from 'lucide-react';
+import { SeletorPeriodo, type Periodo } from '../../components/ui/SeletorPeriodo';
 
 function corSentimento(s: string | null): string {
   const v = (s || '').toLowerCase();
@@ -23,6 +24,7 @@ export default function Atendimentos() {
   const [loading, setLoading] = useState(true);
   const [filtro, setFiltro] = useState("");
   const [apenasExemplos, setApenasExemplos] = useState(false);
+  const [periodo, setPeriodo] = useState<Periodo>({ inicio: null, fim: null });
 
   useEffect(() => {
     async function carregarHistorico() {
@@ -41,6 +43,14 @@ export default function Atendimentos() {
   const termo = filtro.toLowerCase();
   const dadosFiltrados = dados.filter(item => {
     if (apenasExemplos && !item.aprovado_como_exemplo) return false;
+
+    if (periodo.inicio || periodo.fim) {
+      if (!item.aberto_em) return false;
+      const data = item.aberto_em.slice(0, 10); // YYYY-MM-DD
+      if (periodo.inicio && data < periodo.inicio) return false;
+      if (periodo.fim && data > periodo.fim) return false;
+    }
+
     return (
       item.protocolo_id.toString().includes(filtro) ||
       (item.numero?.toLowerCase().includes(termo) ?? false) ||
@@ -106,6 +116,13 @@ export default function Atendimentos() {
             />
           </div>
         </div>
+      </div>
+
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <SeletorPeriodo value={periodo} onChange={setPeriodo} />
+        <span className="text-xs text-gray-400">
+          {dadosFiltrados.length} atendimento{dadosFiltrados.length === 1 ? '' : 's'}
+        </span>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
