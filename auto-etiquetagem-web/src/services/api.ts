@@ -210,6 +210,36 @@ export async function getAtendimentos(): Promise<AtendimentoListItem[]> {
     return response.json();
 }
 
+export type CampoDivergencia = {
+    campo: string;
+    ia: string;
+    corrigido: string;
+    mudou: boolean;
+};
+
+export type Divergencia = {
+    protocolo_id: number;
+    numero: string | null;
+    cliente_nome: string | null;
+    analisado_por: string | null;
+    corrigido_em: string | null;
+    total_mudancas: number;
+    campos: CampoDivergencia[];
+};
+
+export async function getDivergencias(): Promise<Divergencia[]> {
+    const response = await fetch(`${API_BASE}/atendimentos/divergencias`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) {
+        throw new Error("Erro ao carregar divergências");
+    }
+
+    return response.json();
+}
+
 export async function getAtendimentoDetalhe(protocoloId: number | string): Promise<AtendimentoDetalhe> {
     const response = await fetch(`${API_BASE}/atendimentos/${protocoloId}`, {
         method: "GET",
