@@ -326,8 +326,16 @@ export async function classifyBatch(file: File): Promise<BatchResponse> {
     return response.json();
 }
 
-export async function getDashboardStats(): Promise<DashboardStats> {
-    const response = await fetch(`${API_BASE}/dashboard/stats`, {
+function periodoQuery(inicio?: string | null, fim?: string | null): string {
+    const p = new URLSearchParams();
+    if (inicio) p.set("inicio", inicio);
+    if (fim) p.set("fim", fim);
+    const s = p.toString();
+    return s ? `?${s}` : "";
+}
+
+export async function getDashboardStats(inicio?: string | null, fim?: string | null): Promise<DashboardStats> {
+    const response = await fetch(`${API_BASE}/dashboard/stats${periodoQuery(inicio, fim)}`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
     });
@@ -347,8 +355,8 @@ export type AcuraciaStats = {
     erros_por_campo: { categoria: number; sentimento: number; criticidade: number };
 };
 
-export async function getAcuracia(): Promise<AcuraciaStats> {
-    const response = await fetch(`${API_BASE}/dashboard/acuracia`, {
+export async function getAcuracia(inicio?: string | null, fim?: string | null): Promise<AcuraciaStats> {
+    const response = await fetch(`${API_BASE}/dashboard/acuracia${periodoQuery(inicio, fim)}`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
     });

@@ -5,6 +5,7 @@ import {
   PieChart, Pie, Cell, Legend
 } from 'recharts';
 import { StatCard } from '../../components/ui/StatCard';
+import { SeletorPeriodo, type Periodo } from '../../components/ui/SeletorPeriodo';
 import { getDashboardStats, getAcuracia, type DashboardStats, type AcuraciaStats } from '../../services/api';
 
 const PIE_COLORS = ['#cc142d', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899'];
@@ -14,11 +15,16 @@ export default function Dashboard() {
   const [acuracia, setAcuracia] = useState<AcuraciaStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
+  const [periodo, setPeriodo] = useState<Periodo>({ inicio: null, fim: null });
 
   useEffect(() => {
     async function carregar() {
       try {
-        const [data, acc] = await Promise.all([getDashboardStats(), getAcuracia()]);
+        setLoading(true);
+        const [data, acc] = await Promise.all([
+          getDashboardStats(periodo.inicio, periodo.fim),
+          getAcuracia(periodo.inicio, periodo.fim),
+        ]);
         setStats(data);
         setAcuracia(acc);
       } catch (e) {
@@ -29,35 +35,32 @@ export default function Dashboard() {
       }
     }
     carregar();
-  }, []);
+  }, [periodo]);
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 space-y-4">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600"></div>
-        <p className="text-gray-500 font-medium">Carregando métricas...</p>
-      </div>
-    );
-  }
-
-  if (erro || !stats) {
-    return (
-      <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-6">
-        {erro || "Sem dados disponíveis."}
-      </div>
-    );
-  }
-
-  const totalAvaliados = stats.distribuicao_notas.reduce((acc, n) => acc + n.total, 0);
-  const totalCanais = stats.volume_por_canal.length;
+  const totalAvaliados = stats ? stats.distribuicao_notas.reduce((acc, n) => acc + n.total, 0) : 0;
+  const totalCanais = stats ? stats.volume_por_canal.length : 0;
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 uppercase tracking-tight">Dashboard</h1>
-        <p className="text-gray-500">Visão geral do sistema de autoetiquetagem de atendimentos</p>
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 uppercase tracking-tight">Dashboard</h1>
+          <p className="text-gray-500">Visão geral do sistema de autoetiquetagem de atendimentos</p>
+        </div>
+        <SeletorPeriodo value={periodo} onChange={setPeriodo} />
       </div>
 
+      {loading ? (
+        <div className="flex flex-col items-center justify-center h-64 space-y-4">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600"></div>
+          <p className="text-gray-500 font-medium">Carregando métricas...</p>
+        </div>
+      ) : erro || !stats ? (
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-6">
+          {erro || "Sem dados disponíveis."}
+        </div>
+      ) : (
+      <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Total de Atendimentos"
@@ -217,6 +220,8 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }
