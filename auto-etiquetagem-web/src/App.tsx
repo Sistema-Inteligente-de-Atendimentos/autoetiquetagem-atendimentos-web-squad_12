@@ -9,6 +9,7 @@ import Atendimentos from './views/Atendimentos';
 import AtendimentoDetalhe from './views/Atendimentos/Detalhe';
 import EntradaDados from './views/Entrada';
 import Configuracoes from './views/Configuracoes';
+import GoldenDataset from './views/GoldenDataset';
 import Login from './views/Login';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 
@@ -47,6 +48,7 @@ function AppShell() {
             <Route path="/atendimentos/:protocoloId" element={<AtendimentoDetalhe />} />
             <Route path="/entrada" element={<EntradaDados />} />
             <Route path="/configuracoes" element={<Configuracoes />} />
+            <Route path="/golden-dataset" element={<GoldenDataset />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>

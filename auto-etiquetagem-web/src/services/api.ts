@@ -532,3 +532,78 @@ export async function removeCategoria(id: number): Promise<{ status: string; id:
 
     return response.json();
 }
+
+export type GoldenDatasetItem = {
+    id: number;
+    avaliacao_id: number;
+    protocolo_id: number | null;
+    numero: string | null;
+    canal: string | null;
+    cliente_nome: string | null;
+    categoria_esperada: string | null;
+    sentimento_esperado: string | null;
+    criticidade_esperada: string | null;
+    score_esperado: number | null;
+    incluido_por: string | null;
+    incluido_em: string | null;
+};
+
+export type GoldenDatasetRun = {
+    id: number;
+    executado_em: string | null;
+    total_casos: number;
+    acertos_categoria: number;
+    acertos_sentimento: number;
+    acertos_criticidade: number;
+    acuracia_geral: number;
+};
+
+export async function getGoldenDatasetItens(): Promise<GoldenDatasetItem[]> {
+    const response = await fetch(`${API_BASE}/golden-dataset/itens`, {
+        headers: { "Content-Type": "application/json" },
+    });
+    if (!response.ok) throw new Error("Erro ao carregar itens do golden dataset");
+    return response.json();
+}
+
+export async function addGoldenDatasetItem(avaliacaoId: number, incluidoPor?: string): Promise<GoldenDatasetItem> {
+    const response = await fetch(`${API_BASE}/golden-dataset/itens`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify({ avaliacao_id: avaliacaoId, incluido_por: incluidoPor }),
+    });
+    if (!response.ok) {
+        const err = await response.json().catch(() => null);
+        throw new Error(err?.detail || "Erro ao adicionar ao golden dataset");
+    }
+    return response.json();
+}
+
+export async function removeGoldenDatasetItem(id: number): Promise<{ status: string; id: number }> {
+    const response = await fetch(`${API_BASE}/golden-dataset/itens/${id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+    });
+    if (!response.ok) throw new Error("Erro ao remover item do golden dataset");
+    return response.json();
+}
+
+export async function executarGoldenDatasetRun(): Promise<GoldenDatasetRun> {
+    const response = await fetch(`${API_BASE}/golden-dataset/executar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+    });
+    if (!response.ok) {
+        const err = await response.json().catch(() => null);
+        throw new Error(err?.detail || "Erro ao executar rodada do golden dataset");
+    }
+    return response.json();
+}
+
+export async function getGoldenDatasetRuns(): Promise<GoldenDatasetRun[]> {
+    const response = await fetch(`${API_BASE}/golden-dataset/runs`, {
+        headers: { "Content-Type": "application/json" },
+    });
+    if (!response.ok) throw new Error("Erro ao carregar histórico de execuções");
+    return response.json();
+}

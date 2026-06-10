@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, User, MessageSquare, Star, Clock, Award, X, Tag, Pencil, Save, Bot } from 'lucide-react';
+import { ArrowLeft, User, MessageSquare, Star, Clock, Award, X, Tag, Pencil, Save, Bot, CheckCircle, Target } from 'lucide-react';
 import {
   getAtendimentoDetalhe,
   aprovarComoExemplo,
   removerExemplo,
   corrigirClassificacao,
+  addGoldenDatasetItem,
   type AtendimentoDetalhe,
   type CorrecaoClassificacao,
 } from '../../services/api';
+import { useAuth } from '../../hooks/useAuth';
 
 const CATEGORIAS = ['Financeiro', 'Técnico', 'Comercial', 'Logística', 'Reclamação', 'Elogio', 'Cancelamento', 'Dúvida', 'Outros'];
 const SENTIMENTOS = ['Positivo', 'Neutro', 'Negativo'];
@@ -24,6 +26,10 @@ export default function AtendimentoDetalheView() {
 
   const [editando, setEditando] = useState(false);
   const [form, setForm] = useState<CorrecaoClassificacao>({});
+
+  const { usuario } = useAuth();
+  const [adicionandoGolden, setAdicionandoGolden] = useState(false);
+  const [goldenAdicionado, setGoldenAdicionado] = useState(false);
 
   useEffect(() => {
     if (!protocoloId) return;
@@ -88,6 +94,20 @@ export default function AtendimentoDetalheView() {
       alert(e instanceof Error ? e.message : 'Erro ao salvar correção');
     } finally {
       setSalvando(false);
+    }
+  }
+
+  async function handleAdicionarGolden() {
+    if (!detalhe?.avaliacao) return;
+    try {
+      setAdicionandoGolden(true);
+      await addGoldenDatasetItem(detalhe.avaliacao.id, usuario?.nome);
+      setGoldenAdicionado(true);
+    } catch (e) {
+      console.error(e);
+      alert(e instanceof Error ? e.message : 'Erro ao adicionar ao golden dataset');
+    } finally {
+      setAdicionandoGolden(false);
     }
   }
 
@@ -497,6 +517,25 @@ export default function AtendimentoDetalheView() {
                 <Award size={18} />
                 {salvando ? 'Salvando...' : 'Aprovar como bom exemplo'}
               </button>
+            </div>
+          )}
+
+          {(avaliacao.aprovado_como_exemplo || avaliacao.corrigido_em) && (
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              {goldenAdicionado ? (
+                <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                  <CheckCircle size={14} /> Adicionado ao Golden Dataset.
+                </div>
+              ) : (
+                <button
+                  onClick={handleAdicionarGolden}
+                  disabled={adicionandoGolden}
+                  className="w-full bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Target size={18} />
+                  {adicionandoGolden ? 'Adicionando...' : 'Adicionar ao Golden Dataset'}
+                </button>
+              )}
             </div>
           )}
         </div>

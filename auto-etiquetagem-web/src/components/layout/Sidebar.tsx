@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, ListTree, Database, Settings, LogOut, X } from 'lucide-react';
+import { LayoutDashboard, ListTree, Database, Settings, LogOut, X, Target } from 'lucide-react';
 import logoImg from '../../assets/logo.png';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -50,6 +50,7 @@ export const Sidebar = ({ aberta, onClose }: SidebarProps) => {
           <NavItem to="/atendimentos" icon={<ListTree size={18} />} label="Lista de Atendimentos" active={location.pathname === '/atendimentos'} onClick={onClose} />
           <NavItem to="/entrada" icon={<Database size={18} />} label="Entrada de dados" active={location.pathname === '/entrada'} onClick={onClose} />
           <NavItem to="/configuracoes" icon={<Settings size={18} />} label="Configurações" active={location.pathname === '/configuracoes'} onClick={onClose} />
+          <NavItem to="/golden-dataset" icon={<Target size={18} />} label="Golden Dataset" active={location.pathname === '/golden-dataset'} onClick={onClose} />
         </nav>
 
         <div className="mt-auto border-t border-gray-800 pt-3">
