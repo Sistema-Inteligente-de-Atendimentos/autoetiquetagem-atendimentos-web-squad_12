@@ -402,6 +402,8 @@ export type CronStatusItem = {
     fonte: string;
     ultima_linha: number;
     total_processados: number;
+    total_erros: number;
+    ultimo_erro: string | null;
     atualizado_em: string | null;
 };
 
