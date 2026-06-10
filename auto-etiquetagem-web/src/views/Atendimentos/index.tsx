@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAtendimentos, getExportUrl, getDivergencias, type AtendimentoListItem, type Divergencia } from '../../services/api';
-import { Search, Eye, Clock, MessageSquare, Award, Download, Bot, User, GitCompareArrows, ArrowRight } from 'lucide-react';
+import { Search, Eye, Clock, MessageSquare, Award, Download, Bot, User, GitCompareArrows, ArrowRight, AlertTriangle, RefreshCw } from 'lucide-react';
 import { SeletorPeriodo, type Periodo } from '../../components/ui/SeletorPeriodo';
 
 function corSentimento(s: string | null): string {
@@ -22,26 +22,31 @@ function corCriticidade(c: string | null): string {
 export default function Atendimentos() {
   const [dados, setDados] = useState<AtendimentoListItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
   const [filtro, setFiltro] = useState("");
   const [apenasExemplos, setApenasExemplos] = useState(false);
   const [periodo, setPeriodo] = useState<Periodo>({ inicio: null, fim: null });
   const [modoDivergencias, setModoDivergencias] = useState(false);
   const [divergencias, setDivergencias] = useState<Divergencia[]>([]);
 
-  useEffect(() => {
-    async function carregarHistorico() {
-      try {
-        const [resp, divs] = await Promise.all([getAtendimentos(), getDivergencias()]);
-        setDados(resp);
-        setDivergencias(divs);
-      } catch (error) {
-        console.error("Erro ao carregar dados:", error);
-      } finally {
-        setLoading(false);
-      }
+  const carregarHistorico = useCallback(async () => {
+    setLoading(true);
+    setErro(null);
+    try {
+      const [resp, divs] = await Promise.all([getAtendimentos(), getDivergencias()]);
+      setDados(resp);
+      setDivergencias(divs);
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error);
+      setErro(error instanceof Error ? error.message : 'Erro ao carregar atendimentos');
+    } finally {
+      setLoading(false);
     }
-    carregarHistorico();
   }, []);
+
+  useEffect(() => {
+    carregarHistorico();
+  }, [carregarHistorico]);
 
   const termo = filtro.toLowerCase();
   const dadosFiltrados = dados.filter(item => {
@@ -71,6 +76,27 @@ export default function Atendimentos() {
       <div className="flex flex-col items-center justify-center h-64 space-y-4">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600"></div>
         <p className="text-gray-500 font-medium">Consultando base de dados Postgres...</p>
+      </div>
+    );
+  }
+
+  if (erro) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 space-y-4 text-center">
+        <div className="bg-red-50 rounded-full p-3">
+          <AlertTriangle className="text-[#cc142d]" size={28} />
+        </div>
+        <div>
+          <p className="text-gray-700 font-semibold">Não foi possível carregar os atendimentos</p>
+          <p className="text-sm text-gray-400 mt-1">{erro}</p>
+        </div>
+        <button
+          onClick={carregarHistorico}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 transition-all"
+        >
+          <RefreshCw size={16} />
+          Tentar novamente
+        </button>
       </div>
     );
   }

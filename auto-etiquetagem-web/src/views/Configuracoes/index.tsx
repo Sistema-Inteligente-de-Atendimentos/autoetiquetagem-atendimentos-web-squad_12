@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { RefreshCw, Settings, Clock, RotateCcw, CheckCircle, Tag, X, Plus, Lock, Sheet, Trash2, ToggleLeft, ToggleRight, ExternalLink, Moon, Sun } from 'lucide-react';
+import { RefreshCw, Settings, Clock, RotateCcw, CheckCircle, Tag, X, Plus, Lock, Sheet, Trash2, ToggleLeft, ToggleRight, ExternalLink, Moon, Sun, AlertTriangle } from 'lucide-react';
 import {
   getCronStatus,
   resetCron,
@@ -412,7 +412,7 @@ export default function Configuracoes() {
             {status.map((s, idx) => (
               <div key={idx} className="bg-gray-50 border border-gray-100 rounded-lg p-4">
                 <p className="text-xs text-gray-400 font-mono break-all mb-2">{s.fonte}</p>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
                     <p className="text-[10px] uppercase text-gray-400 font-bold tracking-widest">Última linha</p>
                     <p className="text-lg font-black text-gray-800">{s.ultima_linha}</p>
@@ -422,12 +422,24 @@ export default function Configuracoes() {
                     <p className="text-lg font-black text-green-600">{s.total_processados}</p>
                   </div>
                   <div>
+                    <p className="text-[10px] uppercase text-gray-400 font-bold tracking-widest">Erros</p>
+                    <p className={`text-lg font-black ${s.total_erros > 0 ? 'text-red-600' : 'text-gray-800'}`}>
+                      {s.total_erros}
+                    </p>
+                  </div>
+                  <div>
                     <p className="text-[10px] uppercase text-gray-400 font-bold tracking-widest">Atualizado em</p>
                     <p className="text-sm text-gray-700">
                       {s.atualizado_em ? new Date(s.atualizado_em).toLocaleString('pt-BR') : '—'}
                     </p>
                   </div>
                 </div>
+                {s.ultimo_erro && (
+                  <div className="mt-3 flex items-start gap-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                    <AlertTriangle size={14} className="shrink-0 mt-0.5" />
+                    <span className="break-all">Último erro: {s.ultimo_erro}</span>
+                  </div>
+                )}
               </div>
             ))}
           </div>
